@@ -13,7 +13,7 @@ const Footer = () => (
       <div className="footer-links-group">
         <div className="footer-column">
           <a href="#">About Us</a>
-          <a href="#">Jobs</a>
+          <a href="#">Pricing</a>
           <a href="#">Press</a>
           <a href="#">Blog</a>
         </div>
@@ -27,7 +27,7 @@ const Footer = () => (
       
       <div className="footer-contact">
         <p>+1-123-456-7891</p>
-        <p>support@connect.com</p>
+        <p>support@connectio.com</p>
       </div>
       
       <div className="footer-socials">
@@ -42,7 +42,7 @@ const Footer = () => (
         </a>
       </div>
     </div>
-    <div className="footer-copyright">©2025 Connect</div>
+    <div className="footer-copyright">©2025 ConnectIO</div>
   </footer>
 );
 

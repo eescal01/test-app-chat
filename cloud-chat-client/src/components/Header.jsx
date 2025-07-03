@@ -7,13 +7,13 @@ const HeaderNav = () => (
   <header className="header-nav">
     <div className="nav-logo">
       <img src={logo} alt="Logo" />
-      <span>Connect</span>
+      <span>Connect IO</span>
     </div>
     <nav className="nav-links">
       <a href="#">Product</a>
-      <a href="#">Download</a>
-      <a href="#">Safety</a>
       <a href="#">Support</a>
+      <a href="#">Pricing</a>
+      <a href="#">Blog</a>
       <button className="nav-btn" onClick={login}>Try the App</button>
     </nav>
     {/* Menú hamburguesa para móviles */}
