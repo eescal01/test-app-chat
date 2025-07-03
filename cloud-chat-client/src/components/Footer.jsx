@@ -6,7 +6,7 @@ const Footer = () => (
     <div className="footer-main">
       <div className="footer-description">
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+          Connect IO is a cutting-edge cloud-based web service built for modern communities. Deployed using Infrastructure as Code (IaC) principles, our platform ensures scalable, reliable, and secure communication solutions for teams and organizations worldwide.
         </p>
       </div>
       
