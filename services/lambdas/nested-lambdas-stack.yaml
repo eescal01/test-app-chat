@@ -1,0 +1,73 @@
+# ---------------------------------------------------------------------
+# 🧠 Stack Purpose:
+# Basic test Lambda deployment to verify SAM stack execution.
+# Includes a basic IAM role and a single test Lambda function
+# for validating structure and deployment pipeline.
+# ---------------------------------------------------------------------
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: >
+  Simple nested stack to deploy a test Lambda and verify deployment pipeline
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    Description: Deployment environment (dev, staging, prod)
+
+Globals:
+  Function:
+    Runtime: python3.10
+    Timeout: 10
+    MemorySize: 128
+
+Resources:
+
+  # -----------------------------------------------------------------
+  # IAM Role for Lambda execution
+  # -----------------------------------------------------------------
+  TestLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub test-lambda-execution-role-${Stage}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CloudWatchBasicExecution
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+
+  # -----------------------------------------------------------------
+  # Test Lambda Function
+  # -----------------------------------------------------------------
+  TestLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub test-lambda-function-${Stage}
+      Handler: handler.lambda_handler
+      CodeUri: test_lambda/core
+      Role: !GetAtt TestLambdaExecutionRole.Arn
+
+Outputs:
+
+  TestLambdaFunctionName:
+    Description: Logical name of the deployed test Lambda function
+    Value: !Ref TestLambdaFunction
+
+  TestLambdaFunctionArn:
+    Description: ARN of the deployed test Lambda function
+    Value: !GetAtt TestLambdaFunction.Arn

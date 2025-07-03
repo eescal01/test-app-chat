@@ -7,7 +7,6 @@ from pathlib import Path
 
 
 def run(cmd, check=True, cwd=None):
-    """Run a subprocess command and optionally exit on failure"""
     print(f"▶️  Executing: {' '.join(cmd)} (cwd={cwd or os.getcwd()})")
     result = subprocess.run(cmd, cwd=cwd)
     if check and result.returncode != 0:
@@ -17,18 +16,17 @@ def run(cmd, check=True, cwd=None):
 
 
 def bucket_exists(bucket, region):
-    """Check if the S3 bucket exists in the specified region"""
     return run(['aws', 's3api', 'head-bucket', '--bucket', bucket, '--region', region], check=False) == 0
 
 
 def main():
     parser = argparse.ArgumentParser(description="Deploy Cognito + CoreInfra stacks via SAM with nested templates")
-    parser.add_argument('--bucket', required=True, help='S3 bucket to upload nested templates')
-    parser.add_argument('--stack-name', default='cognito-google-auth-stack', help='Root stack name')
-    parser.add_argument('--region', default='us-east-1', help='AWS region')
-    parser.add_argument('--stage', default='dev', help='Deployment stage (dev, qa, prod)')
-    parser.add_argument('--google-client-id', required=True, help='OAuth Client ID from Google')
-    parser.add_argument('--google-client-secret', required=True, help='OAuth Client Secret from Google')
+    parser.add_argument('--bucket', required=True)
+    parser.add_argument('--stack-name', default='cognito-google-auth-stack')
+    parser.add_argument('--region', default='us-east-1')
+    parser.add_argument('--stage', default='dev')
+    parser.add_argument('--google-client-id', required=True)
+    parser.add_argument('--google-client-secret', required=True)
     args = parser.parse_args()
 
     print(f"🔍 Checking if bucket s3://{args.bucket} exists...")
@@ -36,62 +34,58 @@ def main():
         print(f"❌ S3 bucket {args.bucket} does not exist or is not accessible.")
         sys.exit(1)
 
-    # --------------------------------------------
-    # 🧩 Cognito nested stack
-    # --------------------------------------------
+    # 🧩 Cognito
     cognito_dir = Path("services/cognito")
-    cognito_template = cognito_dir / "nested-cognito-google-auth-stack.yaml"
-    cognito_packaged = cognito_dir / "nested-cognito-google-auth-stack-packaged.yaml"
-    cognito_s3_prefix = "services/cognito"
-
-    print(f"📦 Packaging nested Cognito stack: {cognito_template}")
     run([
         'sam', 'package',
-        '--template-file', cognito_template.name,
-        '--output-template-file', cognito_packaged.name,
+        '--template-file', 'nested-cognito-google-auth-stack.yaml',
+        '--output-template-file', 'nested-cognito-google-auth-stack-packaged.yaml',
         '--s3-bucket', args.bucket,
         '--region', args.region,
-        '--s3-prefix', cognito_s3_prefix
+        '--s3-prefix', 'services/cognito'
+    ], cwd=cognito_dir)
+    run([
+        'aws', 's3', 'cp',
+        'nested-cognito-google-auth-stack-packaged.yaml',
+        f's3://{args.bucket}/services/cognito/nested-cognito-google-auth-stack.yaml',
+        '--region', args.region
     ], cwd=cognito_dir)
 
-    print(f"📤 Uploading nested Cognito template to S3: {cognito_packaged}")
-    run([
-        'aws', 's3', 'cp',
-        str(cognito_packaged),
-        f's3://{args.bucket}/{cognito_s3_prefix}/nested-cognito-google-auth-stack.yaml',
-        '--region', args.region
-    ])
-
-    # --------------------------------------------
-    # 🧱 Core Infrastructure nested stack (DynamoDB)
-    # --------------------------------------------
+    # 🧱 CoreInfra
     coreinfra_dir = Path("services/core-infra")
-    coreinfra_template = coreinfra_dir / "core-infra.yaml"
-    coreinfra_packaged = coreinfra_dir / "core-infra-packaged.yaml"
-    coreinfra_s3_prefix = "services/core-infra"
-
-    print(f"📦 Packaging nested CoreInfra stack: {coreinfra_template}")
     run([
         'sam', 'package',
-        '--template-file', coreinfra_template.name,
-        '--output-template-file', coreinfra_packaged.name,
+        '--template-file', 'core-infra.yaml',
+        '--output-template-file', 'core-infra-packaged.yaml',
         '--s3-bucket', args.bucket,
         '--region', args.region,
-        '--s3-prefix', coreinfra_s3_prefix
+        '--s3-prefix', 'services/core-infra'
     ], cwd=coreinfra_dir)
-
-    print(f"📤 Uploading nested CoreInfra template to S3: {coreinfra_packaged}")
     run([
         'aws', 's3', 'cp',
-        str(coreinfra_packaged),
-        f's3://{args.bucket}/{coreinfra_s3_prefix}/core-infra.yaml',
+        'core-infra-packaged.yaml',
+        f's3://{args.bucket}/services/core-infra/core-infra.yaml',
         '--region', args.region
-    ])
+    ], cwd=coreinfra_dir)
 
-    # --------------------------------------------
-    # 🚀 Package and deploy root stack
-    # --------------------------------------------
-    print("📦 Packaging root stack...")
+    # 📈 Monitor Lambdas (solo package + upload, no parámetros en root)
+    monitor_dir = Path("services/lambdas")
+    run([
+        'sam', 'package',
+        '--template-file', 'nested-lambdas-stack.yaml',
+        '--output-template-file', 'nested-lambdas-stack-packaged.yaml',
+        '--s3-bucket', args.bucket,
+        '--region', args.region,
+        '--s3-prefix', 'services/lambdas'
+    ], cwd=monitor_dir)
+    run([
+        'aws', 's3', 'cp',
+        'nested-lambdas-stack-packaged.yaml',
+        f's3://{args.bucket}/services/lambdas/nested-lambdas-stack.yaml',
+        '--region', args.region
+    ], cwd=monitor_dir)
+
+    # 🚀 Root stack deployment
     run([
         'sam', 'package',
         '--template-file', 'root-stack.yaml',
@@ -99,8 +93,6 @@ def main():
         '--output-template-file', 'packaged-root.yaml',
         '--region', args.region
     ])
-
-    print(f"🚀 Deploying root stack: {args.stack_name}")
     run([
         'sam', 'deploy',
         '--template-file', 'packaged-root.yaml',
@@ -112,7 +104,7 @@ def main():
         f"GoogleClientId={args.google_client_id} GoogleClientSecret={args.google_client_secret}"
     ])
 
-    print("✅ Cognito + CoreInfra stacks deployed successfully.")
+    print("✅ All stacks deployed successfully.")
 
 
 if __name__ == '__main__':

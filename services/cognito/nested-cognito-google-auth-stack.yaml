@@ -1,0 +1,119 @@
+# ---------------------------------------------------------------------
+# 🧬 Nested Stack Purpose:
+# Creates the entire Cognito infrastructure:
+#   - User Pool
+#   - Cognito Domain
+#   - Google OAuth Identity Provider
+#   - App Client (code flow, no password)
+# ---------------------------------------------------------------------
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: >
+  Sets up passwordless login with Cognito using Google OAuth 2.0 only.
+  Includes a User Pool, hosted UI domain, IdP (Google), and App Client.
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    Description: Deployment environment (e.g., dev, qa, prod)
+
+  GoogleClientId:
+    Type: String
+    Description: OAuth 2.0 Client ID from Google Cloud Console
+
+  GoogleClientSecret:
+    Type: String
+    Description: OAuth 2.0 Client Secret from Google Cloud Console
+
+Resources:
+
+  # 1️⃣ Cognito User Pool
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub google-auth-userpool-${Stage}
+      AutoVerifiedAttributes:
+        - email
+      UsernameConfiguration:
+        CaseSensitive: false
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+
+  # 2️⃣ Hosted UI Domain for login
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Sub google-auth-domain-${Stage}
+      UserPoolId: !Ref UserPool
+
+  # 3️⃣ Google OAuth Identity Provider (federation)
+  GoogleIdP:
+    Type: AWS::Cognito::UserPoolIdentityProvider
+    Properties:
+      ProviderName: Google
+      ProviderType: Google
+      UserPoolId: !Ref UserPool
+      ProviderDetails:
+        client_id: !Ref GoogleClientId
+        client_secret: !Ref GoogleClientSecret
+        authorize_scopes: "openid email profile"
+        attributes_url: https://www.googleapis.com/oauth2/v3/userinfo
+        attributes_url_add_attributes: "true"
+        oidc_issuer: https://accounts.google.com
+        authorize_url: https://accounts.google.com/o/oauth2/v2/auth
+        token_url: https://oauth2.googleapis.com/token
+      AttributeMapping:
+        email: email
+        name: name
+        given_name: given_name
+        family_name: family_name
+        picture: picture
+
+  # 4️⃣ App Client (only Google OAuth)
+  # 4️⃣ App Client (only Google OAuth)
+  AppClient:
+    Type: AWS::Cognito::UserPoolClient
+    DependsOn : GoogleIdP  # 👈 OBLIGATORIO para evitar errores de timing
+    Properties :
+      ClientName : !Sub google-oauth-client-${Stage}
+      UserPoolId : !Ref UserPool
+      ExplicitAuthFlows : [ ]  # 🔐 No password/login options enabled
+      SupportedIdentityProviders :
+        - Google
+      AllowedOAuthFlows :
+        - code
+      AllowedOAuthScopes :
+        - openid
+        - email
+        - profile
+      AllowedOAuthFlowsUserPoolClient : true
+      CallbackURLs :
+        - https://example.com/callback  # Asegúrate de que sean válidas
+      LogoutURLs :
+        - https://example.com/logout
+      RefreshTokenValidity : 30
+      AccessTokenValidity : 1
+      IdTokenValidity : 1
+      GenerateSecret : false
+
+
+Outputs:
+
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref UserPool
+
+  UserPoolDomainURL:
+    Description: Full Hosted UI Domain for Google OAuth
+    Value: !Sub https://google-auth-domain-${Stage}.auth.${AWS::Region}.amazoncognito.com
+
+  AppClientId:
+    Description: App Client ID for frontend login
+    Value: !Ref AppClient
