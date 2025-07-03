@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: >
+  Root SAM stack to orchestrate Lambda Layer for Uptime chat client integration.
+  Supports parameterized deployments (Stage, DeploymentBucket), clean CI/CD, and versioned resource names.
+
+# ------------------------------------------------
+# 🔧 PARAMETERS
+# Customize by environment (e.g., dev, prod)
+# ------------------------------------------------
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    Description: Deployment stage (dev, qa, prod) used for resource suffixing and tagging.
+
+  DeploymentBucket:
+    Type: String
+    Description: S3 bucket to which build artifacts are uploaded by SAM CLI
+
+# ------------------------------------------------
+# 🧱 RESOURCES
+# Layer. No nested stacks.
+# ------------------------------------------------
+Resources:
+  chatClientLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub chat-client-layer-${Stage}
+      Description: Provides the async chat-api Python client as a Lambda Layer for programmatic integration with Uptime chat monitoring servers.
+      ContentUri: build/chat-client-layer.zip
+      CompatibleRuntimes:
+        - python3.10
+      LicenseInfo: Proprietary
+      CompatibleArchitectures:
+        - x86_64
+        - arm64
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: python3.10
+
+# ------------------------------------------------
+# 📤 OUTPUTS
+# For CI/CD and stack referencing
+# ------------------------------------------------
+Outputs:
+  LayerVersionArn:
+    Description: ARN of the deployed chat Client Lambda Layer
+    Value: !Ref chatClientLayer
+    Export:
+      Name: !Sub chatClientLayerArn-${Stage}
+
+  StackName:
+    Description: Name of the deployed SAM stack
+    Value: !Ref AWS::StackName
+
+# ------------------------------------------------
+# 💡 Notes for CI/CD
+# - Use `sam build --use-container` if using native dependencies
+# - Use `sam deploy --guided` (first time) or provide `--parameter-overrides` for Stage/Bucket
+# - Example:
+#   sam deploy --stack-name chat-client-stack-dev \
+#              --parameter-overrides Stage=dev DeploymentBucket=my-deployment-bucket \
+#              --capabilities CAPABILITY_IAM
+# ------------------------------------------------

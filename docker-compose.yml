@@ -1,0 +1,42 @@
+# -----------------------------------------------------------------------------
+# docker-compose.yml for reproducible Lambda Layer build pipeline
+# This file defines the 'layer-builder' service to build artifacts in a
+# controlled environment (Amazon Linux 2, Python 3.10, x86_64).
+# Also for a reproducible Lambda Layer build pipeline
+# Automatically runs the full Makefile pipeline (`make all`)
+# -----------------------------------------------------------------------------
+
+services:
+  layer-builder:
+    # Build context and Dockerfile located in the current directory
+    build:
+      context: .
+    # Forces x86_64 architecture for AWS Lambda compatibility
+    platform: linux/x86_64
+    # Mounts local source code into /app in the container for direct and bidirectional access
+    volumes:
+      - .:/app
+    # Sets /app as the default working directory
+    working_dir: /app
+    # Runs the full Makefile pipeline automatically
+    command: make all
+
+# -----------------------------------------------------------------------------
+# When starting this service, the following sequence is executed:
+#  1. clean                - Cleans previous artifacts and prepares folders
+#  2. clone_kuma           - Clones the main dependency (Uptime Kuma API)
+#  3. export_requirements  - Exports dependencies to requirements.txt
+#  4. install_dependencies - Installs all dependencies into the layer structure
+#  5. build_layer          - Creates the final ZIP for AWS Lambda Layer
+#  6. validate_structure   - Validates the generated structure
+#  7. Extra validation: Ensures build only runs on Linux/Docker
+# -----------------------------------------------------------------------------
+# Usage:
+#   make docker-compose-all or make docker-compose-clean-build
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Notes:
+# - Change 'platform' to 'linux/arm64' if your Lambda requires ARM architecture.
+# - Use 'docker-compose exec layer-builder bash' to enter the container and run manual commands.
+# -----------------------------------------------------------------------------

@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'Root stack for creating a passwordless login system using Google OAuth
+  2.0 and Cognito. This stack also launches the core infrastructure for real-time
+  chat using a single-table DynamoDB design optimized for scale. It also deploys observability
+  Lambdas (Vault/Chatwoot/SES).
+
+  '
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    Description: Deployment stage (dev, qa, prod)
+  DeploymentBucket:
+    Type: String
+    Description: S3 bucket that contains the nested stack templates
+  GoogleClientId:
+    Type: String
+    Description: OAuth Client ID from Google Cloud Console
+  GoogleClientSecret:
+    Type: String
+    Description: OAuth Client Secret from Google Cloud Console
+Resources:
+  CognitoGoogleAuthStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Sub: https://${DeploymentBucket}.s3.${AWS::Region}.amazonaws.com/services/cognito/nested-cognito-google-auth-stack.yaml
+      Parameters:
+        Stage:
+          Ref: Stage
+        GoogleClientId:
+          Ref: GoogleClientId
+        GoogleClientSecret:
+          Ref: GoogleClientSecret
+    Metadata:
+      SamResourceId: CognitoGoogleAuthStack
+  CoreInfraStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Sub: https://${DeploymentBucket}.s3.${AWS::Region}.amazonaws.com/services/core-infra/core-infra.yaml
+      Parameters:
+        Stage:
+          Ref: Stage
+    Metadata:
+      SamResourceId: CoreInfraStack
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Sub: https://${DeploymentBucket}.s3.${AWS::Region}.amazonaws.com/services/lambdas/nested-lambdas-stack.yaml
+      Parameters:
+        Stage:
+          Ref: Stage
+    Metadata:
+      SamResourceId: LambdaStack
+Outputs:
+  CognitoNestedStackId:
+    Description: ID of the nested Cognito OAuth stack
+    Value:
+      Ref: CognitoGoogleAuthStack
+  CoreInfraNestedStackId:
+    Description: ID of the nested core infrastructure stack
+    Value:
+      Ref: CoreInfraStack
+  LambdaStack:
+    Description: ID of the nested Lambda monitor stack
+    Value:
+      Ref: LambdaStack

@@ -3,6 +3,10 @@
 # Author: Emmanuel Palacio Gaviria (@SixTanDev)
 # ------------------------------------------------------------------
 
+PYTHON=python3.10
+LAYER_NAME=chat-client-layer
+BUILD_DIR=build
+LAYER_DIR=layer/python
 PROJECT_NAME=auth-google
 TEMPLATE=root-stack.yaml
 REGION=us-east-1
@@ -91,4 +95,42 @@ help:
 	@echo "   usage: make s3-delete BUCKET=<bucket-name>"
 	@echo ""
 
-.PHONY: deploy delete s3-create s3-empty s3-delete help
+## 📦 Export dependencies using Poetry to requirements.txt
+export_requirements:
+	poetry export -f requirements.txt --output requirements.txt --without-hashes
+
+## 📚 Install Python dependencies into the layer directory
+install_dependencies:
+	$(PYTHON) -m pip install -r requirements.txt -t $(LAYER_DIR)
+
+## 🧳 Build the final ZIP layer ready for AWS Lambda
+build_layer:
+	mkdir -p $(BUILD_DIR)
+	cd layer && zip -r ../$(BUILD_DIR)/$(LAYER_NAME).zip .
+
+all:
+	@echo "✅ Starting full pipeline using Poetry..."
+	$(MAKE) export_requirements
+	$(MAKE) install_dependencies
+	$(MAKE) build_layer
+
+# ------------------------------------------------------------------
+# 🐳 Docker Build Helpers
+# ------------------------------------------------------------------
+
+docker-build:
+	docker build -t kuma-layer-builder .
+
+docker-all:
+	docker run --rm -v "$$(pwd)":/app -w /app kuma-layer-builder make all
+
+docker-compose-all:
+	docker-compose build
+	docker-compose run --rm layer-builder make all
+
+docker-compose-clean-build:
+	docker-compose build --no-cache
+	docker-compose run --rm layer-builder make all
+
+.PHONY: deploy delete s3-create s3-empty s3-delete help all clean \
+	docker-build docker-all docker-compose-all docker-compose-clean-build

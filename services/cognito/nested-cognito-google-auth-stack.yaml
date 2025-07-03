@@ -95,9 +95,9 @@ Resources:
         - profile
       AllowedOAuthFlowsUserPoolClient : true
       CallbackURLs :
-        - https://example.com/callback  # Asegúrate de que sean válidas
+        - https://main.d2p1llmpk1i4a9.amplifyapp.com/callback  # Asegúrate de que sean válidas
       LogoutURLs :
-        - https://example.com/logout
+        - https://main.d2p1llmpk1i4a9.amplifyapp.com/callback
       RefreshTokenValidity : 30
       AccessTokenValidity : 1
       IdTokenValidity : 1
