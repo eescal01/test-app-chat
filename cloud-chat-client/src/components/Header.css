@@ -80,7 +80,7 @@
       width: 32px;
       height: 32px;
       opacity: 0;
-      z-index: 20;
+      z-index: 21;
       cursor: pointer;
     }
     .nav-toggle-label {
@@ -94,7 +94,7 @@
       width: 32px;
       height: 32px;
       cursor: pointer;
-      z-index: 21;
+      z-index: 22;
     }
     .nav-toggle-label span,
     .nav-toggle-label span::before,
@@ -128,13 +128,24 @@
       background: #fff;
       width: 100vw;
       box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-      padding: 18px 24px;
-      gap: 18px;
-      z-index: 19;
+      padding: 24px 24px;
+      gap: 24px;
+      z-index: 20;
       transform: translateY(-120%);
       transition: transform 0.3s;
     }
     .nav-toggle:checked ~ .nav-mobile {
       transform: translateY(0);
+    }
+    .nav-mobile a,
+    .nav-mobile .nav-btn {
+      display: block;
+      width: 100%;
+      text-align: right;
+      margin-bottom: 12px;
+    }
+    .nav-mobile .nav-btn {
+      display: block;
+      margin-top: 18px;
     }
   }
