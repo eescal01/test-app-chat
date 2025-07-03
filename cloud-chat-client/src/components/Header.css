@@ -139,13 +139,10 @@
     }
     .nav-mobile a,
     .nav-mobile .nav-btn {
-      display: block;
-      width: 100%;
       text-align: right;
-      margin-bottom: 12px;
+      /*margin-bottom: 12px;*/
     }
     .nav-mobile .nav-btn {
       display: block;
-      margin-top: 18px;
     }
   }
