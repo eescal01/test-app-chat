@@ -11,7 +11,7 @@ description = "Async chat layer build for AWS Lambda"  # Short project summary
 
 # 👤 Maintainer and author metadata
 authors = [
-    {name = "Evert Escalante", email = "eescal01"}
+    {name = "Evert Escalante", email = "eescal01@gmail.com"}
 ]
 
 readme = "README.md"                  # Markdown file used for PyPI description
