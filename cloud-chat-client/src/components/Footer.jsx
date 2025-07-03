@@ -41,8 +41,8 @@ const Footer = () => (
           <i className="fa-brands fa-instagram"></i>
         </a>
       </div>
-      <div className="footer-copyright">©2025 Connect</div>
     </div>
+    <div className="footer-copyright">©2025 Connect</div>
   </footer>
 );
 
