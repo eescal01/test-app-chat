@@ -7,7 +7,7 @@
 #   1. Store user profiles and presence
 #   2. Store 1-1 messages grouped by chatId
 #   3. Track chat membership (by user)
-#   4. Efficiently list user chats with pagination and ordering
+#   4. Efficiently list user chats and messages using GSIs
 #
 # 🧰 Validated with:
 #   sam validate --template-file core-infra.yaml --region us-east-1 --lint
@@ -19,55 +19,55 @@ Description: >
   Single-table DynamoDB design to support real-time messaging at scale
   across thousands of users and conversations.
 
+# ---------------------------------------------------------------------
+# 🧾 Parameters:
+# Allows the root stack to pass the environment stage (e.g., dev, qa, prod)
+# ---------------------------------------------------------------------
+Parameters:
+  Stage:
+    Type: String
+    Description: Deployment stage for environment separation (e.g. dev, qa, prod)
+
 Resources:
 
   # ---------------------------------------------------------------------
   # 📦 ChatAppTable:
-  # This is the main (and only) DynamoDB table for the entire chat application.
-  # It uses a single-table design to store users, conversations, messages,
-  # presence data, and references — all in one scalable structure.
+  # This is the central DynamoDB table for all chat-related data.
+  # It stores users, messages, sessions, and chat participation
+  # using a single-table pattern for horizontal scalability.
   # ---------------------------------------------------------------------
   ChatAppTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: chat-app-table  # Logical name for the table
+      TableName: !Sub chat-app-table-${Stage}  # Unique name per environment
 
       BillingMode: PAY_PER_REQUEST
-      # Pay-per-request means we don’t need to provision read/write capacity.
-      # It automatically scales with usage and we only pay for what we use.
+      # Pay-per-request scales automatically with usage
 
-      # --------------------------------------------------------------
-      # 🔑 Attribute Definitions:
-      # Define all attributes that are used in the primary key or indexes.
-      # --------------------------------------------------------------
       AttributeDefinitions:
         - AttributeName: PK
-          AttributeType: S  # Partition Key (e.g., USER#123, CHAT#abc)
+          AttributeType: S
         - AttributeName: SK
-          AttributeType: S  # Sort Key (e.g., PROFILE, MSG#timestamp)
-        - AttributeName: Type
-          AttributeType: S  # Logical type of the item (User, Message, etc.)
+          AttributeType: S
         - AttributeName: GSI1PK
-          AttributeType: S  # GSI for listing chats or messages by user
+          AttributeType: S
         - AttributeName: GSI1SK
-          AttributeType: S  # GSI sort field (e.g., lastUpdated timestamp)
+          AttributeType: S
+        - AttributeName: Type
+          AttributeType: S
+        - AttributeName: name
+          AttributeType: S
+        - AttributeName: lastUpdated
+          AttributeType: S
 
-      # --------------------------------------------------------------
-      # 🧱 Primary Key Schema:
-      # The main PK/SK schema used for grouping and sorting items.
-      # --------------------------------------------------------------
       KeySchema:
         - AttributeName: PK
           KeyType: HASH
         - AttributeName: SK
           KeyType: RANGE
 
-      # --------------------------------------------------------------
-      # 🚀 Global Secondary Index (GSI1):
-      # Used to query all chat references for a user or all messages in a chat.
-      # Example: GSI1PK = USER#123 and GSI1SK = timestamp
-      # --------------------------------------------------------------
       GlobalSecondaryIndexes:
+        # GSI for listing all chats that a user participates in
         - IndexName: GSI1
           KeySchema:
             - AttributeName: GSI1PK
@@ -75,31 +75,41 @@ Resources:
             - AttributeName: GSI1SK
               KeyType: RANGE
           Projection:
-            ProjectionType: ALL  # Include all attributes in GSI results
+            ProjectionType: ALL
 
-      # --------------------------------------------------------------
-      # ⏳ TTL (Time To Live):
-      # Enables automatic deletion of items with a 'ttl' timestamp in the past.
-      # Useful for expiring ACTIVE# sessions (user presence tracking).
-      # --------------------------------------------------------------
+        # GSI for user profile lookups by type (optional, not always needed)
+        - IndexName: TypeNameIndex
+          KeySchema:
+            - AttributeName: Type
+              KeyType: HASH
+            - AttributeName: name
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+        # GSI for querying chat messages ordered by timestamp
+        - IndexName: ChatMessageIndex
+          KeySchema:
+            - AttributeName: GSI1PK
+              KeyType: HASH
+            - AttributeName: lastUpdated
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
       TimeToLiveSpecification:
         AttributeName: ttl
         Enabled: true
 
-      # --------------------------------------------------------------
-      # 🏷️ Tags:
-      # Help organize and identify resources in AWS Console and billing.
-      # --------------------------------------------------------------
       Tags:
         - Key: Project
           Value: ScalableChatApp
         - Key: Environment
-          Value: prod
+          Value: !Ref Stage
 
 # ---------------------------------------------------------------------
 # 📤 Outputs:
-# Export values to reference this table in other stacks or Lambda functions.
-# Useful for wiring up APIs, Lambdas, or CI/CD pipelines.
+# Used by Lambdas, APIs, or other stacks to access this table
 # ---------------------------------------------------------------------
 Outputs:
 

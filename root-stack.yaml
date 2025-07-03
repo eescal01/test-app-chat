@@ -1,10 +1,12 @@
 # ---------------------------------------------------------------------
 # 🧠 Root Stack Purpose:
-# Orchestrates nested stack for Cognito with Google OAuth integration.
+# Orchestrates nested stack for Cognito with Google OAuth integration,
+# and a core infrastructure stack for real-time chat.
 #
 # Responsibilities:
 #   1. Pass Google OAuth credentials and stage to nested Cognito stack
 #   2. Deploys the complete Cognito OAuth2 login system
+#   3. Deploys core infrastructure for chat (DynamoDB table, etc.)
 # ---------------------------------------------------------------------
 
 AWSTemplateFormatVersion: '2010-09-09'
@@ -12,9 +14,13 @@ Transform: AWS::Serverless-2016-10-31
 
 Description: >
   Root stack for creating a passwordless login system using Google OAuth 2.0 and Cognito.
-  This stack launches the nested stack that builds the Cognito infrastructure and sets up
-  Google as the only identity provider.
+  This stack also launches the core infrastructure for real-time chat using a
+  single-table DynamoDB design optimized for scale.
 
+# ------------------------------------------------
+# 🔧 PARAMETERS
+# Shared parameters across nested stacks
+# ------------------------------------------------
 Parameters:
 
   Stage:
@@ -34,8 +40,16 @@ Parameters:
     Type: String
     Description: OAuth Client Secret from Google Cloud Console
 
+# ------------------------------------------------
+# 🧱 RESOURCES
+# Nested stacks for Cognito auth and core chat infrastructure
+# ------------------------------------------------
 Resources:
 
+  # -----------------------------------------------------------------
+  # 🔐 Cognito + Google OAuth Stack
+  # Deploys the user authentication system
+  # -----------------------------------------------------------------
   CognitoGoogleAuthStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -45,8 +59,27 @@ Resources:
         GoogleClientId: !Ref GoogleClientId
         GoogleClientSecret: !Ref GoogleClientSecret
 
+  # -----------------------------------------------------------------
+  # 💬 Core Infrastructure Stack
+  # Deploys the DynamoDB table for chat and user profiles
+  # -----------------------------------------------------------------
+  CoreInfraStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${DeploymentBucket}.s3.${AWS::Region}.amazonaws.com/services/core-infra/core-infra.yaml
+      Parameters:
+        Stage: !Ref Stage
+
+# ------------------------------------------------
+# 📤 OUTPUTS
+# Export logical names and stack IDs for downstream references
+# ------------------------------------------------
 Outputs:
 
   CognitoNestedStackId:
     Description: ID of the nested Cognito OAuth stack
     Value: !Ref CognitoGoogleAuthStack
+
+  CoreInfraNestedStackId:
+    Description: ID of the nested core infrastructure stack
+    Value: !Ref CoreInfraStack
