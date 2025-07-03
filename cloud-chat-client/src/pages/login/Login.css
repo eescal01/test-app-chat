@@ -6,7 +6,7 @@
 */
 @media (max-width: 600px) {
     .login .logo {
-        height: 100px;
+        height: 200px;
         max-width: 80vw;
 
     }
