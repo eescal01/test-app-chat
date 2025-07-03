@@ -3,9 +3,9 @@
 /*.login .logo {
     height: 100px;
 }
-
+*/
 @media (max-width: 600px) {
     .login .logo {
         height: 60px;
     }
-}*/
+}
