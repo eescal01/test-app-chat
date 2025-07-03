@@ -3,12 +3,16 @@ import './Login.css';
 import assets from "../../assets/assets";
 
 const style = {
-    background: `url(${assets.background}) no-repeat`,
-    backgroundSize: 'cover',
-    height: '100vh',
-    display: 'flex',
-    justifyContent: 'center',
-    justifyContent: 'space-evenly'
+    minHeight: "100vh",
+    minWidth: "100vw",
+    background: `url(${assets.background}) no-repeat center center fixed`,
+    backgroundSize: "cover",
+    display: "flex",
+    flexDirection: "column", // Mejor para apilar elementos verticalmente
+    justifyContent: "center",
+    alignItems: "center",
+    padding: "2rem", // Espacio interno para pantallas pequeñas
+    boxSizing: "border-box"
 };
 
 const Login = () => {
