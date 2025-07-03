@@ -1,5 +1,5 @@
 const COGNITO_DOMAIN = 'https://google-auth-domain-dev.auth.us-east-1.amazoncognito.com';
-const CLIENT_ID = '758g0k3knce0c6kp66goo5hgvk';
+const CLIENT_ID = '4s5egqvtv4dephr5gvbbe1h0uc';
 const REDIRECT_URI = 'https://main.d2p1llmpk1i4a9.amplifyapp.com/callback';
 
 export default function App() {
