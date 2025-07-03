@@ -3,8 +3,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from './App.jsx';
-import Callback from './callback.jsx';
-import ChatRoom from './chatRoom.jsx';
+import Callback from './Callback.jsx';
+// ... existing code ...
+import ChatRoom from './ChatRoom.jsx';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
