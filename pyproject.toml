@@ -1,18 +1,32 @@
+# ---------------------------------------------------------------------------
+# 📦 pyproject.toml — Python project metadata and dependency specification
+# 🧑‍💻 Maintainer: Evert Escalante <eescal01>
+# 📋 Tool: Poetry (recommended for Python dependency & packaging management)
+# ---------------------------------------------------------------------------
+
 [project]
-name = "test-app-chat"
-version = "0.1.0"
-description = ""
+name = "test-app-chat"                 # Unique package/project name
+version = "0.1.0"                      # Semantic versioning: MAJOR.MINOR.PATCH
+description = "Async chat layer build for AWS Lambda"  # Short project summary
+
+# 👤 Maintainer and author metadata
 authors = [
-    {name = "Emmanuel Palacio Gaviria",email = "sixtandev@gmail.com"}
+    {name = "Evert Escalante", email = "eescal01"}
 ]
-readme = "README.md"
-requires-python = ">=3.10"
+
+readme = "README.md"                  # Markdown file used for PyPI description
+requires-python = ">=3.10"            # Enforces minimum Python version required
+
+# 📦 Runtime dependencies installed with `poetry install`
 dependencies = [
-    "boto3 (>=1.39.2,<2.0.0)",
-    "pydantic (>=2.11.7,<3.0.0)"
+    "boto3 (>=1.39.2,<2.0.0)",         # AWS SDK for Python (S3, Lambda, etc.)
+    "pydantic (>=2.11.7,<3.0.0)"       # Data validation library (typed models)
 ]
 
-
+# ---------------------------------------------------------------------------
+# 🔧 Build configuration (PEP 517/518 compliant)
+# Poetry uses 'poetry-core' as the lightweight backend for building packages
+# ---------------------------------------------------------------------------
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
