@@ -14,7 +14,7 @@ const Footer = () => (
         <div className="footer-column">
           <a href="#">About Us</a>
           <a href="#">Pricing</a>
-          <a href="#">Press</a>
+          <a href="#">Features</a>
           <a href="#">Blog</a>
         </div>
         
@@ -42,7 +42,7 @@ const Footer = () => (
         </a>
       </div>
     </div>
-    <div className="footer-copyright">©2025 ConnectIO</div>
+    <div className="footer-copyright">©2025 Connect IO</div>
   </footer>
 );
 

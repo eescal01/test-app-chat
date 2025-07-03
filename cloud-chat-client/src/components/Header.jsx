@@ -10,9 +10,9 @@ const HeaderNav = () => (
       <span>Connect IO</span>
     </div>
     <nav className="nav-links">
-      <a href="#">Product</a>
-      <a href="#">Support</a>
+      <a href="#">About Us</a>
       <a href="#">Pricing</a>
+      <a href="#">Features</a>
       <a href="#">Blog</a>
       <button className="nav-btn" onClick={login}>Try the App</button>
     </nav>

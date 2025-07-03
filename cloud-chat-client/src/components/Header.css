@@ -10,6 +10,7 @@
     border-bottom: 1px solid #f0f0f0;
     position: relative;
     z-index: 10;
+    font-family: 'Plus Jakarta Sans', 'Noto Sans', Arial, sans-serif; 
   }
 
   .nav-logo {
@@ -34,8 +35,8 @@
   .nav-links a {
     color: #222;
     text-decoration: none;
-    font-size: 0.98rem;
-    font-weight: 600;
+    font-size: 1.1rem;
+    font-weight: 500;
     transition: color 0.2s;
   }
   
