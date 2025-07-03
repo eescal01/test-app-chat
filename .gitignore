@@ -1,0 +1,27 @@
+# ---------------------------------------------------------------------
+# 🛠️ Ignore IDE-specific metadata
+# These files are created by JetBrains IDEs (e.g., PyCharm) and should not be committed
+.idea/*
+
+# ---------------------------------------------------------------------
+# 📦 Ignore build artifacts
+# These directories and files are generated automatically during the layer build process
+# and should never be committed to version control.
+# Final ZIP files for Lambda Layer (output of `make build_layer`)
+build/
+# Temporary structure where code and dependencies are staged
+layer/
+# Python bytecode cache generated during local runs
+__pycache__/
+# Compiled Python files (platform-dependent, unnecessary for versioning)
+*.pyc
+# Output archives; they are reproducible and large
+*.zip
+# Exported automatically from pyproject.toml using `poetry export`
+# It reflects current dependencies but should not be versioned manually
+requirements.txt
+
+# SAM packaged artifacts - IGNORE FROM VERSION CONTROL
+services/core-infra/core-infra-packaged.yaml
+services/cognito/nested-cognito-google-auth-stack-packaged.yaml
+services/lambdas/nested-lambdas-stack-packaged.yaml
