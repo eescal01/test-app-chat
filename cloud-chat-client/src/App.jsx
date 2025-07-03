@@ -1,7 +1,6 @@
-const COGNITO_DOMAIN = 'https://google-auth-domain-dev.auth.us-east-1.amazoncognito.com';
-const CLIENT_ID = '4s5egqvtv4dephr5gvbbe1h0uc';
-const REDIRECT_URI = 'https://main.d2p1llmpk1i4a9.amplifyapp.com/callback';
+import { COGNITO_DOMAIN, CLIENT_ID, REDIRECT_URI, RESPONSE_TYPE, SCOPE } from './config';
 
+// Ahora puedes usar estas variables en tu componente App
 export default function App() {
   const login = () => {
     const url = `${COGNITO_DOMAIN}/login?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=openid+email+profile`;

@@ -1,10 +1,9 @@
 // src/Callback.jsx
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { COGNITO_DOMAIN, CLIENT_ID, REDIRECT_URI, RESPONSE_TYPE, SCOPE } from './config';
 
-const COGNITO_DOMAIN = 'https://google-auth-domain-dev.auth.us-east-1.amazoncognito.com';
-const CLIENT_ID = '4s5egqvtv4dephr5gvbbe1h0uc';
-const REDIRECT_URI = 'https://main.d2p1llmpk1i4a9.amplifyapp.com/callback';
+// Ahora puedes usar estas variables en tu componente App
 
 export default function Callback() {
   const navigate = useNavigate();
