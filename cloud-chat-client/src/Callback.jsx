@@ -1,30 +1,31 @@
 // src/Callback.jsx
 import { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { COGNITO_DOMAIN, CLIENT_ID, REDIRECT_URI } from './config';
+import { useNavigate } from 'react-router-dom';
 
-function Callback() {
+const COGNITO_DOMAIN = 'https://google-auth-domain-dev.auth.us-east-1.amazoncognito.com';
+const CLIENT_ID = '758g0k3knce0c6kp66goo5hgvk';
+const REDIRECT_URI = 'http://localhost:5173/callback';
+
+export default function Callback() {
   const navigate = useNavigate();
-  const { search } = useLocation();
 
   useEffect(() => {
-    const params = new URLSearchParams(search);
-    const code = params.get('code');
+    const code = new URLSearchParams(window.location.search).get('code');
 
     if (!code) {
-      // Manejar error
+      console.error('No code found in callback URL.');
       return;
     }
 
     const fetchTokens = async () => {
-      const body = new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: CLIENT_ID,
-        code,
-        redirect_uri: REDIRECT_URI,
-      });
-
       try {
+        const body = new URLSearchParams({
+          grant_type: 'authorization_code',
+          client_id: CLIENT_ID,
+          code,
+          redirect_uri: REDIRECT_URI,
+        });
+
         const response = await fetch(`${COGNITO_DOMAIN}/oauth2/token`, {
           method: 'POST',
           headers: {
@@ -33,23 +34,27 @@ function Callback() {
           body,
         });
 
-        if (!response.ok) throw new Error('Token exchange failed');
         const data = await response.json();
 
+        if (data.error) {
+          console.error('Token exchange error:', data);
+          return;
+        }
+
+        // Save tokens for later use
         localStorage.setItem('id_token', data.id_token);
         localStorage.setItem('access_token', data.access_token);
         localStorage.setItem('refresh_token', data.refresh_token);
 
+        // Redirect to chat room
         navigate('/chat');
       } catch (err) {
-        alert('Error al intercambiar el código por tokens');
+        console.error('Token exchange failed:', err);
       }
     };
 
     fetchTokens();
-  }, [search, navigate]);
+  }, [navigate]);
 
-  return <div>Procesando inicio de sesión...</div>;
+  return <p>Logging you in with Google...</p>;
 }
-
-export default Callback;
