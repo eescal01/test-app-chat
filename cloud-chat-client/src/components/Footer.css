@@ -15,10 +15,6 @@
   align-items: flex-start;
 }
 
-.footer-description {
-  max-width: 300px;
-}
-
 .footer-description p {
   color: #bdc3c7;
   font-size: 0.9rem;
@@ -91,7 +87,6 @@
   color: #ecf0f1;
   text-align: left;
   padding: 15px 0;
-  margin-top: 40px;
   font-size: 0.9rem;
   font-weight: 500;
 }

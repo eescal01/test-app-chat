@@ -26,7 +26,6 @@ const CommunityHero = () => (
         </div>
       </div>
     </div>
-    <div className="footer-copyright">©2025 Connect</div>
     <Footer />
   </>
 );
