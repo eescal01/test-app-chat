@@ -1,7 +1,7 @@
-// import logo_big from "./logo_big.png";
+import logo_big from "./logo_big.png";
 
-// const assets = {
-//     logo_big
-// }
+const assets = {
+    logo_big
+}
 
-// export default assets;
+export default assets;
