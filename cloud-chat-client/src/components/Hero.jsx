@@ -2,6 +2,7 @@ import React from "react";
 import assets from "../assets/assets";
 import "./Hero.css";
 import HeaderNav from "./Header";
+import { login } from '../utils/google_auth_login';
 
 const CommunityHero = () => (
   <>
@@ -18,7 +19,7 @@ const CommunityHero = () => (
             friends. Where you can stay close and have fun over text, voice, and
             video.
           </p>
-          <button className="hero-btn">Try the App</button>
+          <button className="hero-btn" onClick={login}>Try the App</button>
         </div>
       </div>
       <footer className="hero-footer">
