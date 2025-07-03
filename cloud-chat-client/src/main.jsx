@@ -1,23 +1,19 @@
-// index.js
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
-import { AuthProvider } from "react-oidc-context";
+// src/main.jsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import App from './App';
+import Callback from './Callback';
+import ChatRoom from './ChatRoom';
 
-const cognitoAuthConfig = {
-  authority: "https://google-auth-domain-dev.auth.us-east-1.amazoncognito.com", // Hosted UI domain
-  client_id: "758g0k3knce0c6kp66goo5hgvk",
-  redirect_uri: "http://localhost:5173/callback",
-  response_type: "code",
-  scope: "openid email profile",
-};
-
-const root = ReactDOM.createRoot(document.getElementById("root"));
-
-root.render(
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <AuthProvider {...cognitoAuthConfig}>
-      <App />
-    </AuthProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="/callback" element={<Callback />} />
+        <Route path="/chat" element={<ChatRoom />} />
+      </Routes>
+    </BrowserRouter>
   </React.StrictMode>
 );
