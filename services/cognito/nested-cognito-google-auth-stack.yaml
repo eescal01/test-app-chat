@@ -1,59 +1,90 @@
-# ---------------------------------------------------------------------
-# 🧬 Nested Stack Purpose:
-# Creates the entire Cognito infrastructure:
-#   - User Pool
-#   - Cognito Domain
-#   - Google OAuth Identity Provider
-#   - App Client (code flow, no password)
-# ---------------------------------------------------------------------
+AWSTemplateFormatVersion: '2010-09-09'  # Standard version for CloudFormation templates.
+Transform: AWS::Serverless-2016-10-31   # Enables use of AWS SAM syntax and features.
 
-AWSTemplateFormatVersion: '2010-09-09'
-Transform: AWS::Serverless-2016-10-31
-
+# -----------------------------------------------------------------------------
+# 🧾 TEMPLATE DESCRIPTION
+# -----------------------------------------------------------------------------
+# This nested stack sets up the full authentication infrastructure using
+# Amazon Cognito and Google OAuth 2.0.
+#
+# Main components:
+# 1. Cognito User Pool (backing user directory)
+# 2. Hosted UI domain (for login redirect)
+# 3. Google Identity Provider (federated login only)
+# 4. App Client configured for OAuth 2.0 Code Grant Flow (no password-based login)
+#
+# This configuration allows passwordless login using a Google account.
 Description: >
   Sets up passwordless login with Cognito using Google OAuth 2.0 only.
   Includes a User Pool, hosted UI domain, IdP (Google), and App Client.
 
+# -----------------------------------------------------------------------------
+# 🔧 INPUT PARAMETERS
+# -----------------------------------------------------------------------------
+# These values are passed from the parent stack and allow customization
+# based on deployment stage or external secrets from Google Cloud Console.
 Parameters:
+
   Stage:
     Type: String
     Default: dev
-    Description: Deployment environment (e.g., dev, qa, prod)
+    Description: |
+      Deployment environment (e.g., dev, qa, prod).
+      Used for naming and scoping resources to specific environments.
 
   GoogleClientId:
     Type: String
-    Description: OAuth 2.0 Client ID from Google Cloud Console
+    Description: |
+      Client ID from your Google Cloud Console OAuth 2.0 credentials.
+      Used to configure Google as an external identity provider.
 
   GoogleClientSecret:
     Type: String
-    Description: OAuth 2.0 Client Secret from Google Cloud Console
+    Description: |
+      Client secret from Google Cloud Console, used to exchange auth codes for tokens.
 
+# -----------------------------------------------------------------------------
+# 🏗️ RESOURCES
+# -----------------------------------------------------------------------------
+# Core Cognito resources necessary to enable OAuth-based login with Google only.
 Resources:
 
+  # -----------------------------------------------------------------------------
   # 1️⃣ Cognito User Pool
+  # -----------------------------------------------------------------------------
+  # The central user directory for the application.
+  # We're using email as the unique ID and enabling admin-only user creation.
+  # Since this is OAuth-based, users are federated — they log in via Google.
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
       UserPoolName: !Sub google-auth-userpool-${Stage}
       AutoVerifiedAttributes:
-        - email
+        - email  # Email will be auto-verified upon registration
       UsernameConfiguration:
-        CaseSensitive: false
+        CaseSensitive: false  # More user-friendly username handling
       AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: true
+        AllowAdminCreateUserOnly: true  # Manual user provisioning if needed
       AccountRecoverySetting:
         RecoveryMechanisms:
           - Name: verified_email
-            Priority: 1
+            Priority: 1  # Password recovery will use verified email
 
-  # 2️⃣ Hosted UI Domain for login
+  # -----------------------------------------------------------------------------
+  # 2️⃣ Hosted Cognito Domain
+  # -----------------------------------------------------------------------------
+  # Used to serve the Cognito-hosted login UI and redirect after OAuth login.
   UserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
-      Domain: !Sub google-auth-domain-${Stage}
+      Domain: !Sub google-auth-domain-${Stage}  # Must be globally unique
       UserPoolId: !Ref UserPool
 
-  # 3️⃣ Google OAuth Identity Provider (federation)
+  # -----------------------------------------------------------------------------
+  # 3️⃣ Google OAuth Identity Provider
+  # -----------------------------------------------------------------------------
+  # Registers Google as a federated IdP for the user pool.
+  # Defines the scopes and endpoint URLs required for OAuth 2.0.
   GoogleIdP:
     Type: AWS::Cognito::UserPoolIdentityProvider
     Properties:
@@ -74,36 +105,46 @@ Resources:
         name: name
         given_name: given_name
         family_name: family_name
-        picture: picture
+        picture: picture  # Maps user profile picture from Google to Cognito
 
-  # 4️⃣ App Client (only Google OAuth)
-  # 4️⃣ App Client (only Google OAuth)
+  # -----------------------------------------------------------------------------
+  # 4️⃣ Cognito App Client
+  # -----------------------------------------------------------------------------
+  # This is the client your frontend application uses to initiate the OAuth flow.
+  # Note:
+  #   - Only Google is allowed as IdP
+  #   - Only "code" flow is enabled (OAuth Authorization Code Grant)
+  #   - No password login allowed (ExplicitAuthFlows = [])
   AppClient:
     Type: AWS::Cognito::UserPoolClient
-    DependsOn : GoogleIdP  # 👈 OBLIGATORIO para evitar errores de timing
+    DependsOn : GoogleIdP  # Ensures IdP is created before the client references it
     Properties :
       ClientName : !Sub google-oauth-client-${Stage}
       UserPoolId : !Ref UserPool
-      ExplicitAuthFlows : [ ]  # 🔐 No password/login options enabled
+      ExplicitAuthFlows : [ ]  # ❌ Disables username/password login
       SupportedIdentityProviders :
         - Google
       AllowedOAuthFlows :
-        - code
+        - code  # Most secure: exchanges code for tokens via backend
       AllowedOAuthScopes :
         - openid
         - email
         - profile
       AllowedOAuthFlowsUserPoolClient : true
       CallbackURLs :
-        - https://main.d2p1llmpk1i4a9.amplifyapp.com/callback  # Asegúrate de que sean válidas
+        - https://main.d2p1llmpk1i4a9.amplifyapp.com/callback  # Your frontend login redirect URI
       LogoutURLs :
-        - https://main.d2p1llmpk1i4a9.amplifyapp.com/callback
-      RefreshTokenValidity : 30
-      AccessTokenValidity : 1
-      IdTokenValidity : 1
-      GenerateSecret : false
+        - https://main.d2p1llmpk1i4a9.amplifyapp.com/callback  # Redirect after logout
+      RefreshTokenValidity : 30  # Refresh token expires in 30 days
+      AccessTokenValidity : 1    # Access token lasts 1 hour
+      IdTokenValidity : 1        # ID token lasts 1 hour
+      GenerateSecret : false     # No client secret required for public frontend apps
 
-
+# -----------------------------------------------------------------------------
+# 📤 OUTPUTS
+# -----------------------------------------------------------------------------
+# These values are exposed to the root stack or to developers
+# for integration with other stacks or applications.
 Outputs:
 
   UserPoolId:
@@ -111,9 +152,13 @@ Outputs:
     Value: !Ref UserPool
 
   UserPoolDomainURL:
-    Description: Full Hosted UI Domain for Google OAuth
+    Description: |
+      Fully qualified domain name (FQDN) of the Cognito-hosted login UI.
+      This is where users are redirected to authenticate with Google.
     Value: !Sub https://google-auth-domain-${Stage}.auth.${AWS::Region}.amazoncognito.com
 
   AppClientId:
-    Description: App Client ID for frontend login
+    Description: |
+      Cognito App Client ID required by frontend apps to authenticate users
+      and exchange codes for tokens.
     Value: !Ref AppClient

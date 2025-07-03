@@ -1,27 +1,13 @@
-# ---------------------------------------------------------------------
-# 🧠 Stack Purpose:
-# Highly scalable DynamoDB single-table for real-time chat at scale.
-# Optimized for 1-1 conversations across thousands of users and millions of messages.
-#
-# Responsibilities:
-#   1. Store user profiles and presence
-#   2. Store 1-1 messages grouped by chatId
-#   3. Track chat membership (by user)
-#   4. Efficiently list user chats and messages using GSIs
-#
-# 🧰 Validated with:
-#   sam validate --template-file core-infra.yaml --region us-east-1 --lint
-# ---------------------------------------------------------------------
-
 AWSTemplateFormatVersion: '2010-09-09'
 
 Description: >
   Single-table DynamoDB design to support real-time messaging at scale
-  across thousands of users and conversations.
+  across thousands of users and conversations. Enables efficient queries
+  for user profiles, messages, and chat metadata using GSIs.
 
 # ---------------------------------------------------------------------
-# 🧾 Parameters:
-# Allows the root stack to pass the environment stage (e.g., dev, qa, prod)
+# 🔧 PARAMETERS
+# These allow reusability across environments (e.g., dev, qa, prod).
 # ---------------------------------------------------------------------
 Parameters:
   Stage:
@@ -31,33 +17,38 @@ Parameters:
 Resources:
 
   # ---------------------------------------------------------------------
-  # 📦 ChatAppTable:
-  # This is the central DynamoDB table for all chat-related data.
-  # It stores users, messages, sessions, and chat participation
-  # using a single-table pattern for horizontal scalability.
+  # 🗂️ ChatAppTable - Core DynamoDB Resource
+  #
+  # Purpose:
+  # Centralized single-table design to store all real-time chat metadata,
+  # including user profiles, presence status, messages, and participation.
+  #
+  # Why Single Table:
+  #  - Reduces join-like operations between users/chats/messages.
+  #  - Enables fast, scalable access patterns via Partition and Sort Keys.
+  #  - Allows multiple entity types (User, Message, Chat) in one table.
   # ---------------------------------------------------------------------
   ChatAppTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub chat-app-table-${Stage}  # Unique name per environment
+      TableName: !Sub chat-app-table-${Stage}  # Suffix with stage for isolation
 
-      BillingMode: PAY_PER_REQUEST
-      # Pay-per-request scales automatically with usage
+      BillingMode: PAY_PER_REQUEST  # Autoscaling cost-efficient mode
 
       AttributeDefinitions:
-        - AttributeName: PK
+        - AttributeName: PK              # Partition Key
           AttributeType: S
-        - AttributeName: SK
+        - AttributeName: SK              # Sort Key
           AttributeType: S
-        - AttributeName: GSI1PK
+        - AttributeName: GSI1PK          # GSI1 Partition Key (user chat list / message stream)
           AttributeType: S
-        - AttributeName: GSI1SK
+        - AttributeName: GSI1SK          # GSI1 Sort Key
           AttributeType: S
-        - AttributeName: Type
+        - AttributeName: Type            # Used for indexing user types
           AttributeType: S
-        - AttributeName: name
+        - AttributeName: name            # Used for sorting user profiles
           AttributeType: S
-        - AttributeName: lastUpdated
+        - AttributeName: lastUpdated     # Timestamp of last message
           AttributeType: S
 
       KeySchema:
@@ -67,7 +58,7 @@ Resources:
           KeyType: RANGE
 
       GlobalSecondaryIndexes:
-        # GSI for listing all chats that a user participates in
+        # List of chats a user is part of, sorted by recent activity
         - IndexName: GSI1
           KeySchema:
             - AttributeName: GSI1PK
@@ -77,7 +68,7 @@ Resources:
           Projection:
             ProjectionType: ALL
 
-        # GSI for user profile lookups by type (optional, not always needed)
+        # Lookup for users by Type + name (e.g. Type = 'User', name = 'Alice')
         - IndexName: TypeNameIndex
           KeySchema:
             - AttributeName: Type
@@ -87,7 +78,7 @@ Resources:
           Projection:
             ProjectionType: ALL
 
-        # GSI for querying chat messages ordered by timestamp
+        # Efficient querying of messages ordered by timestamp within a chat
         - IndexName: ChatMessageIndex
           KeySchema:
             - AttributeName: GSI1PK
@@ -98,7 +89,7 @@ Resources:
             ProjectionType: ALL
 
       TimeToLiveSpecification:
-        AttributeName: ttl
+        AttributeName: ttl  # Used to auto-expire presence records
         Enabled: true
 
       Tags:
@@ -108,8 +99,7 @@ Resources:
           Value: !Ref Stage
 
 # ---------------------------------------------------------------------
-# 📤 Outputs:
-# Used by Lambdas, APIs, or other stacks to access this table
+# 📤 OUTPUTS - For referencing table info from other stacks
 # ---------------------------------------------------------------------
 Outputs:
 

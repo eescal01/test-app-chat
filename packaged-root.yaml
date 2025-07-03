@@ -10,16 +10,33 @@ Parameters:
   Stage:
     Type: String
     Default: dev
-    Description: Deployment stage (dev, qa, prod)
+    Description: 'The deployment stage name, such as dev, qa, or prod.
+
+      This value is passed to all nested stacks to help suffix or tag resources.
+
+      '
   DeploymentBucket:
     Type: String
-    Description: S3 bucket that contains the nested stack templates
+    Description: 'The name of the S3 bucket where your packaged CloudFormation templates
+      are stored.
+
+      The nested stacks are pulled from this bucket via their TemplateURL.
+
+      '
   GoogleClientId:
     Type: String
-    Description: OAuth Client ID from Google Cloud Console
+    Description: 'The OAuth 2.0 client ID for your Google application.
+
+      Used to enable Google Sign-In through Cognito.
+
+      '
   GoogleClientSecret:
     Type: String
-    Description: OAuth Client Secret from Google Cloud Console
+    Description: 'The OAuth 2.0 client secret for your Google application.
+
+      Used with Cognito for secure token exchange.
+
+      '
 Resources:
   CognitoGoogleAuthStack:
     Type: AWS::CloudFormation::Stack
@@ -57,14 +74,26 @@ Resources:
       SamResourceId: LambdaStack
 Outputs:
   CognitoNestedStackId:
-    Description: ID of the nested Cognito OAuth stack
+    Description: 'Logical ID of the Cognito Google OAuth nested stack.
+
+      Can be used to trace and debug the auth layer separately.
+
+      '
     Value:
       Ref: CognitoGoogleAuthStack
   CoreInfraNestedStackId:
-    Description: ID of the nested core infrastructure stack
+    Description: 'Logical ID of the Core Infrastructure nested stack.
+
+      Useful for tracing database infrastructure and state.
+
+      '
     Value:
       Ref: CoreInfraStack
   LambdaStack:
-    Description: ID of the nested Lambda monitor stack
+    Description: 'Logical ID of the Observability Lambda nested stack.
+
+      Provides insight into the health and monitoring setup.
+
+      '
     Value:
       Ref: LambdaStack

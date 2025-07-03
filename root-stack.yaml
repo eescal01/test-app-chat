@@ -1,52 +1,79 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Transform: AWS::Serverless-2016-10-31
+AWSTemplateFormatVersion: '2010-09-09'  # Defines the CloudFormation template version format. Required for all templates.
 
+Transform: AWS::Serverless-2016-10-31  # Enables the use of AWS SAM (Serverless Application Model) features.
+
+# ---------------------------------------------------------------------
+# 📜 STACK DESCRIPTION
+# ---------------------------------------------------------------------
+# This is the root AWS SAM template that orchestrates the deployment of:
+# 1. A passwordless authentication system using Google OAuth 2.0 and Amazon Cognito.
+# 2. A real-time chat backend infrastructure using a highly scalable DynamoDB single-table design.
+# 3. Monitoring and observability Lambda functions for Vault, Chatwoot, and SES integration.
+#
+# The actual infrastructure is defined in separate nested stacks, allowing modularity and
+# separation of responsibilities for better maintainability and reuse.
 Description: >
   Root stack for creating a passwordless login system using Google OAuth 2.0 and Cognito.
   This stack also launches the core infrastructure for real-time chat using a
   single-table DynamoDB design optimized for scale.
   It also deploys observability Lambdas (Vault/Chatwoot/SES).
 
-# ------------------------------------------------
+# ---------------------------------------------------------------------
 # 🔧 PARAMETERS
-# Shared parameters across nested stacks
-# ------------------------------------------------
+# ---------------------------------------------------------------------
+# Parameters allow the template to be reused across different environments (dev, qa, prod)
+# and allow flexible configuration without changing the template logic itself.
 Parameters:
 
   Stage:
     Type: String
     Default: dev
-    Description: Deployment stage (dev, qa, prod)
+    Description: |
+      The deployment stage name, such as dev, qa, or prod.
+      This value is passed to all nested stacks to help suffix or tag resources.
 
   DeploymentBucket:
     Type: String
-    Description: S3 bucket that contains the nested stack templates
+    Description: |
+      The name of the S3 bucket where your packaged CloudFormation templates are stored.
+      The nested stacks are pulled from this bucket via their TemplateURL.
 
   GoogleClientId:
     Type: String
-    Description: OAuth Client ID from Google Cloud Console
+    Description: |
+      The OAuth 2.0 client ID for your Google application.
+      Used to enable Google Sign-In through Cognito.
 
   GoogleClientSecret:
     Type: String
-    Description: OAuth Client Secret from Google Cloud Console
+    Description: |
+      The OAuth 2.0 client secret for your Google application.
+      Used with Cognito for secure token exchange.
 
-# ------------------------------------------------
+# ---------------------------------------------------------------------
 # 🧱 RESOURCES
-# Nested stacks for Cognito auth, core infra, and observability Lambdas
-# ------------------------------------------------
+# ---------------------------------------------------------------------
+# This section declares the nested stacks that make up the core components of your system.
+# Each nested stack is a self-contained CloudFormation template responsible for a domain.
+
 Resources:
 
-  # 🔐 Cognito + Google OAuth
+  # 🔐 Cognito Authentication Stack
+  # This nested stack creates an authentication system using Amazon Cognito
+  # and integrates Google OAuth 2.0 for passwordless sign-in.
   CognitoGoogleAuthStack:
     Type: AWS::CloudFormation::Stack
     Properties:
+      # Construct the URL to load the nested stack template from S3
       TemplateURL: !Sub https://${DeploymentBucket}.s3.${AWS::Region}.amazonaws.com/services/cognito/nested-cognito-google-auth-stack.yaml
       Parameters:
-        Stage: !Ref Stage
-        GoogleClientId: !Ref GoogleClientId
-        GoogleClientSecret: !Ref GoogleClientSecret
+        Stage: !Ref Stage  # Pass the environment stage into the nested stack
+        GoogleClientId: !Ref GoogleClientId  # Pass Google client ID securely
+        GoogleClientSecret: !Ref GoogleClientSecret  # Pass Google client secret securely
 
-  # 💬 Core DynamoDB Infrastructure
+  # 💬 Core Infrastructure Stack
+  # This nested stack creates the DynamoDB table and indexes for storing chat data.
+  # Uses a single-table design pattern for scalable real-time messaging.
   CoreInfraStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -54,7 +81,9 @@ Resources:
       Parameters:
         Stage: !Ref Stage
 
-  # 📈 Observability Monitor Lambdas
+  # 📈 Observability & Monitoring Stack
+  # This nested stack deploys Lambda functions for monitoring Vault, Chatwoot, and SES.
+  # Helps ensure visibility, error tracking, and email integration across environments.
   LambdaStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -62,20 +91,28 @@ Resources:
       Parameters:
         Stage: !Ref Stage
 
-# ------------------------------------------------
+# ---------------------------------------------------------------------
 # 📤 OUTPUTS
-# Export logical names and stack IDs
-# ------------------------------------------------
+# ---------------------------------------------------------------------
+# Outputs make key stack references available for other stacks, scripts, or
+# manual inspection after deployment. These values can also be exported/imported.
+
 Outputs:
 
   CognitoNestedStackId:
-    Description: ID of the nested Cognito OAuth stack
+    Description: |
+      Logical ID of the Cognito Google OAuth nested stack.
+      Can be used to trace and debug the auth layer separately.
     Value: !Ref CognitoGoogleAuthStack
 
   CoreInfraNestedStackId:
-    Description: ID of the nested core infrastructure stack
+    Description: |
+      Logical ID of the Core Infrastructure nested stack.
+      Useful for tracing database infrastructure and state.
     Value: !Ref CoreInfraStack
 
   LambdaStack:
-    Description: ID of the nested Lambda monitor stack
+    Description: |
+      Logical ID of the Observability Lambda nested stack.
+      Provides insight into the health and monitoring setup.
     Value: !Ref LambdaStack

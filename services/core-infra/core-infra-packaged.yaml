@@ -1,6 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: 'Single-table DynamoDB design to support real-time messaging at scale
-  across thousands of users and conversations.
+  across thousands of users and conversations. Enables efficient queries for user
+  profiles, messages, and chat metadata using GSIs.
 
   '
 Parameters:

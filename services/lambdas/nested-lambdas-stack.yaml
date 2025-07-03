@@ -1,33 +1,49 @@
-# ---------------------------------------------------------------------
-# 🧠 Stack Purpose:
-# Basic test Lambda deployment to verify SAM stack execution.
-# Includes a basic IAM role and a single test Lambda function
-# for validating structure and deployment pipeline.
-# ---------------------------------------------------------------------
-
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
+# ---------------------------------------------------------------------
+# 📄 Description
+# ---------------------------------------------------------------------
+# This stack is intended to validate that:
+# - The SAM framework is set up properly
+# - The deployment pipeline works end-to-end
+# - A basic Lambda function can be deployed and executed
+#
+# It provisions:
+# - A minimal IAM role with CloudWatch permissions
+# - A single test Lambda function for smoke testing
 Description: >
-  Simple nested stack to deploy a test Lambda and verify deployment pipeline
+  Simple nested stack to deploy a test Lambda and verify deployment pipeline.
 
+# ---------------------------------------------------------------------
+# 🔧 Parameters
+# ---------------------------------------------------------------------
+# These allow customization for different environments like dev, qa, prod.
 Parameters:
   Stage:
     Type: String
     Default: dev
-    Description: Deployment environment (dev, staging, prod)
+    Description: Deployment environment (e.g., dev, staging, prod)
 
+# ---------------------------------------------------------------------
+# ⚙️ Globals
+# ---------------------------------------------------------------------
+# These default settings apply to all Lambda functions in this template.
 Globals:
   Function:
-    Runtime: python3.10
-    Timeout: 10
-    MemorySize: 128
+    Runtime: python3.10         # Lambda uses Python 3.10
+    Timeout: 10                 # Maximum execution time in seconds
+    MemorySize: 128             # Memory allocated to the Lambda (MB)
 
+# ---------------------------------------------------------------------
+# 🧱 Resources
+# ---------------------------------------------------------------------
 Resources:
 
   # -----------------------------------------------------------------
-  # IAM Role for Lambda execution
+  # 🔐 IAM Role for Lambda execution
   # -----------------------------------------------------------------
+  # Grants the Lambda function permissions to write logs to CloudWatch.
   TestLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -37,7 +53,7 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service: lambda.amazonaws.com
+              Service: lambda.amazonaws.com   # Only Lambda can assume this role
             Action: sts:AssumeRole
       Policies:
         - PolicyName: CloudWatchBasicExecution
@@ -49,19 +65,24 @@ Resources:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                Resource: "*"
+                Resource: "*"                 # Allows logging to any group/stream
 
   # -----------------------------------------------------------------
-  # Test Lambda Function
+  # 🧪 Test Lambda Function
   # -----------------------------------------------------------------
+  # This is a minimal Lambda meant to verify that everything is working.
   TestLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub test-lambda-function-${Stage}
-      Handler: handler.lambda_handler
-      CodeUri: test_lambda/core
-      Role: !GetAtt TestLambdaExecutionRole.Arn
+      Handler: handler.lambda_handler          # Python entry point: handler.py -> lambda_handler
+      CodeUri: test_lambda/core                # Folder containing the Lambda code
+      Role: !GetAtt TestLambdaExecutionRole.Arn # Attach the IAM role defined above
 
+# ---------------------------------------------------------------------
+# 📤 Outputs
+# ---------------------------------------------------------------------
+# These outputs can be used for debugging or referenced in other stacks
 Outputs:
 
   TestLambdaFunctionName:
