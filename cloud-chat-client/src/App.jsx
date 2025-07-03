@@ -1,20 +1,33 @@
-// src/App.jsx
-import { COGNITO_DOMAIN, CLIENT_ID, REDIRECT_URI, RESPONSE_TYPE, SCOPE } from './config';
+// App.jsx
+import { useAuth } from "react-oidc-context";
 
-function App() {
-  const handleLogin = () => {
-    const url = `${COGNITO_DOMAIN}/oauth2/authorize?response_type=${RESPONSE_TYPE}&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${SCOPE}`;
-    window.location.href = url;
+export default function App() {
+  const auth = useAuth();
+
+  if (auth.isLoading) return <p>Loading...</p>;
+  if (auth.error) return <p>Oops... {auth.error.message}</p>;
+
+  if (!auth.isAuthenticated) {
+    return (
+      <div>
+        <h1>Welcome to the 1-1 Chat App</h1>
+        <button onClick={() => auth.signinRedirect()}>Sign in with Google</button>
+      </div>
+    );
+  }
+
+  const signOutRedirect = () => {
+    const clientId = "758g0k3knce0c6kp66goo5hgvk";
+    const logoutUri = "http://localhost:5173/";
+    const cognitoDomain = "https://google-auth-domain-dev.auth.us-east-1.amazoncognito.com";
+    localStorage.clear();
+    window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(logoutUri)}`;
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 100 }}>
-      <h1>Iniciar sesión</h1>
-      <button onClick={handleLogin} style={{ padding: '10px 20px', fontSize: 18 }}>
-        Sign in with Google
-      </button>
+    <div>
+      <h2>👋 Hello, {auth.user?.profile?.email}</h2>
+      <button onClick={signOutRedirect}>Sign Out</button>
     </div>
   );
 }
-
-export default App;
