@@ -1,63 +1,86 @@
 # -----------------------------------------------------------------------------
-# Dockerfile for building an AWS Lambda Layer (Python 3.10, Amazon Linux 2)
-# Includes recommended maintainer and metadata labels for traceability.
+# 🐳 Dockerfile for building an AWS Lambda Layer (Python 3.10, Amazon Linux 2)
+# This image is designed for compatibility with AWS Lambda’s runtime and builds
+# all dependencies using Poetry in a reproducible environment.
 # -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
-# BASE IMAGE: Amazon Linux 2
-# Ensures binary compatibility with AWS Lambda runtime (x86_64).
+# 🔹 BASE IMAGE
+# Uses Amazon Linux 2 to match AWS Lambda runtime environment (x86_64).
 # -----------------------------------------------------------------------------
 FROM amazonlinux:2
 
 # -----------------------------------------------------------------------------
-# Recommended metadata labels (maintainer, description, version, etc.)
-# Improves traceability, searchability, and compliance with OCI best practices.
+# 🔖 METADATA LABELS (OCI Standard)
+# These labels improve traceability, documentation, and CI/CD introspection.
 # -----------------------------------------------------------------------------
-LABEL maintainer="Emmanuel Palacio Gaviria <sixtandev@gmail.com>"
-LABEL description="Dockerfile for building a compatible AWS Lambda Layer (Amazon Linux 2, Python 3.10, Poetry 2.x, plugin-export)"
+LABEL maintainer="Evert Escalante <eescal01>"
+LABEL description="Dockerfile for building a compatible AWS Lambda Layer (Amazon Linux 2, Python 3.10, Poetry 2.x)"
 LABEL version="1.0.0"
-LABEL org.opencontainers.image.authors="Emmanuel Palacio Gaviria"
-LABEL org.opencontainers.image.source="https://github.com/your-org/lambda-layer-kuma-client"
+LABEL org.opencontainers.image.authors="Evert Escalante"
+LABEL org.opencontainers.image.source="https://github.com/your-org/lambda-layer-build"
 LABEL org.opencontainers.image.licenses="Proprietary"
 
 # -----------------------------------------------------------------------------
-# Install core development tools and required system libraries
+# ⚙️ INSTALL CORE DEVELOPMENT TOOLS
+# Includes compilers and libraries required to build Python packages.
 # -----------------------------------------------------------------------------
 RUN yum groupinstall "Development Tools" -y && \
-    yum install gcc openssl11 openssl11-devel libffi-devel bzip2-devel wget curl git zip -y
+    yum install -y \
+        gcc \
+        openssl11 \
+        openssl11-devel \
+        libffi-devel \
+        bzip2-devel \
+        wget \
+        curl \
+        git \
+        zip
 
-# Instalación de Python 3.10
+# -----------------------------------------------------------------------------
+# 🐍 INSTALL PYTHON 3.10 FROM SOURCE
+# Ensures exact version matching and compatibility with Poetry environment.
+# -----------------------------------------------------------------------------
 RUN wget https://www.python.org/ftp/python/3.10.2/Python-3.10.2.tgz && \
     tar xzf Python-3.10.2.tgz && \
     cd Python-3.10.2 && \
     ./configure --enable-optimizations && \
-    make -j $(nproc) && \
+    make -j "$(nproc)" && \
     make altinstall && \
-    ln -sf /usr/local/bin/python3.10 /usr/bin/python  # 👈 FIX
+    ln -sf /usr/local/bin/python3.10 /usr/bin/python  # Symlink to use `python`
 
-# Instala Poetry
+# -----------------------------------------------------------------------------
+# 📦 INSTALL POETRY PACKAGE MANAGER
+# Poetry is used to manage project dependencies in a clean, lockfile-based way.
+# -----------------------------------------------------------------------------
 RUN curl -sSL https://install.python-poetry.org | python3.10 -
 
+# Add Poetry to PATH and explicitly define the Python interpreter
 ENV PATH="/root/.local/bin:$PATH"
 ENV POETRY_PYTHON=python3.10
 
 # -----------------------------------------------------------------------------
-# Set working directory for reproducible builds
+# 📁 SETUP WORKING DIRECTORY
+# Standard build directory used by Makefile or docker-compose pipelines.
 # -----------------------------------------------------------------------------
 WORKDIR /app
 
 # -----------------------------------------------------------------------------
-# Copy source code and configuration files into the container
+# 📤 COPY PROJECT FILES
+# This includes the pyproject.toml and source code required for dependency build.
 # -----------------------------------------------------------------------------
 COPY . .
 
 # -----------------------------------------------------------------------------
-# Install project dependencies using Poetry (without installing the project root package)
-# Add poetry-plugin-export to enable 'poetry export'
+# 🔌 INSTALL DEPENDENCIES WITH POETRY
+# Uses plugin 'poetry-plugin-export' for exporting requirements if needed.
+# `--no-root` skips installing the local project package.
 # -----------------------------------------------------------------------------
-RUN poetry self add poetry-plugin-export
-RUN poetry install --no-root
+RUN poetry self add poetry-plugin-export && \
+    poetry install --no-root
 
 # -----------------------------------------------------------------------------
-# (CMD not defined; this container is intended for automated build tasks)
+# 🛑 NO CMD DEFINED
+# This image is intended to be used as a build step or in automation.
+# Use `docker run` with custom entrypoints or `make docker-compose-all`.
 # -----------------------------------------------------------------------------

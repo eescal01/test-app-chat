@@ -1,42 +1,48 @@
 # -----------------------------------------------------------------------------
-# docker-compose.yml for reproducible Lambda Layer build pipeline
-# This file defines the 'layer-builder' service to build artifacts in a
-# controlled environment (Amazon Linux 2, Python 3.10, x86_64).
-# Also for a reproducible Lambda Layer build pipeline
-# Automatically runs the full Makefile pipeline (`make all`)
+# 🐳 docker-compose.yml for Reproducible Lambda Layer Build (Chat Project)
+#
+# This file defines the `layer-builder` service, which executes the full Makefile
+# pipeline inside a consistent and isolated Amazon Linux 2 environment with Python 3.10.
+# The goal is to generate an AWS Lambda Layer in a reproducible and portable way.
 # -----------------------------------------------------------------------------
 
 services:
   layer-builder:
-    # Build context and Dockerfile located in the current directory
+    # 📦 Docker build context and Dockerfile assumed to be in the current directory
     build:
       context: .
-    # Forces x86_64 architecture for AWS Lambda compatibility
+
+    # 🧬 Force architecture compatibility with AWS Lambda runtime (x86_64)
     platform: linux/x86_64
-    # Mounts local source code into /app in the container for direct and bidirectional access
+
+    # 📂 Mount local project directory into the container at /app
     volumes:
       - .:/app
-    # Sets /app as the default working directory
+
+    # 📍 Set default working directory for all commands
     working_dir: /app
-    # Runs the full Makefile pipeline automatically
+
+    # 🛠️ Automatically runs the complete build pipeline via Makefile
+    # Includes clean, install, package, validate, and ZIP steps
     command: make all
 
 # -----------------------------------------------------------------------------
-# When starting this service, the following sequence is executed:
-#  1. clean                - Cleans previous artifacts and prepares folders
-#  2. clone_kuma           - Clones the main dependency (Uptime Kuma API)
-#  3. export_requirements  - Exports dependencies to requirements.txt
-#  4. install_dependencies - Installs all dependencies into the layer structure
-#  5. build_layer          - Creates the final ZIP for AWS Lambda Layer
-#  6. validate_structure   - Validates the generated structure
-#  7. Extra validation: Ensures build only runs on Linux/Docker
-# -----------------------------------------------------------------------------
-# Usage:
-#   make docker-compose-all or make docker-compose-clean-build
+# 🔁 Build Sequence Executed (via `make all`):
+#  1. clean                - Removes previous builds and prepares output folders
+#  2. export_requirements  - Converts Poetry dependencies to requirements.txt
+#  3. install_dependencies - Installs into the /layer/python/ structure
+#  4. build_layer          - Creates ZIP archive for AWS Lambda Layer
+#  5. validate_structure   - Verifies layer ZIP and directory contents
+#
+# ❗️ No external dependencies like Kuma are cloned or fetched in this pipeline.
 # -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
-# Notes:
-# - Change 'platform' to 'linux/arm64' if your Lambda requires ARM architecture.
-# - Use 'docker-compose exec layer-builder bash' to enter the container and run manual commands.
+# 🧪 Usage:
+#   docker-compose up --build             # Run full build automatically
+#   docker-compose exec layer-builder bash  # Enter container for debugging
+#
+# 🧠 Notes:
+# - Change `platform` to `linux/arm64` if deploying to Graviton Lambdas
+# - All artifacts are generated inside the local `/app` directory (bound volume)
 # -----------------------------------------------------------------------------

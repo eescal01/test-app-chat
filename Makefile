@@ -132,5 +132,12 @@ docker-compose-clean-build:
 	docker-compose build --no-cache
 	docker-compose run --rm layer-builder make all
 
+# 🧹 Clean all packaged templates
+clean-packaged:
+	@echo "🧹 Removing packaged YAML templates..."
+	find . -type f -name "*-packaged.yaml" -exec rm -v {} \;
+	@echo "✅ Done: All packaged templates have been removed."
+
+
 .PHONY: deploy delete s3-create s3-empty s3-delete help all clean \
-	docker-build docker-all docker-compose-all docker-compose-clean-build
+	docker-build docker-all docker-compose-all docker-compose-clean-build clean-packaged
