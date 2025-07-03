@@ -1,66 +1,104 @@
+# -----------------------------------------------------------------------------
+# 🧠 Stack Purpose:
+# Deploys a reusable AWS Lambda Layer for a Python async chat client.
+# Designed for CI/CD pipelines with parameterized stages and versioned layer names.
+# -----------------------------------------------------------------------------
+
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
 Description: >
-  Root SAM stack to orchestrate Lambda Layer for Uptime chat client integration.
-  Supports parameterized deployments (Stage, DeploymentBucket), clean CI/CD, and versioned resource names.
+  Root SAM stack to orchestrate Lambda Layer for Chat Client integration.
+  Enables parameterized deployments (Stage, DeploymentBucket) and supports
+  automated CI/CD with version-controlled Lambda Layer outputs.
 
-# ------------------------------------------------
+# -----------------------------------------------------------------------------
 # 🔧 PARAMETERS
-# Customize by environment (e.g., dev, prod)
-# ------------------------------------------------
+# Allows dynamic customization based on environment (dev, qa, prod)
+# -----------------------------------------------------------------------------
 Parameters:
+
   Stage:
     Type: String
     Default: dev
-    Description: Deployment stage (dev, qa, prod) used for resource suffixing and tagging.
+    Description: >
+      Deployment stage for environment separation (e.g., dev, qa, prod).
+      Used for suffixing resource names and tagging infrastructure.
 
   DeploymentBucket:
     Type: String
-    Description: S3 bucket to which build artifacts are uploaded by SAM CLI
+    Description: >
+      Name of the S3 bucket used to upload SAM build artifacts
+      during deployment (via `sam deploy` or CI/CD pipelines).
 
-# ------------------------------------------------
+# -----------------------------------------------------------------------------
 # 🧱 RESOURCES
-# Layer. No nested stacks.
-# ------------------------------------------------
+# Defines a single Lambda Layer that can be attached to multiple Lambdas
+# -----------------------------------------------------------------------------
 Resources:
+
   chatClientLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
+      # 🏷️ Logical name of the layer will include the stage (e.g., dev, prod)
       LayerName: !Sub chat-client-layer-${Stage}
-      Description: Provides the async chat-api Python client as a Lambda Layer for programmatic integration with Uptime chat monitoring servers.
+
+      # 📝 Description for visibility in Lambda console and CLI
+      Description: >
+        Provides the async chat-api Python client as a Lambda Layer.
+        Intended for integration with real-time chat monitoring infrastructure.
+
+      # 📦 Content ZIP path — expected to be built before deployment
       ContentUri: build/chat-client-layer.zip
+
+      # 🐍 Compatible Python runtime(s)
       CompatibleRuntimes:
         - python3.10
+
+      # 📜 Custom license metadata
       LicenseInfo: Proprietary
+
+      # 🧬 Architecture compatibility: x86_64 and ARM64 (Graviton)
       CompatibleArchitectures:
         - x86_64
         - arm64
+
+      # 🗂️ Keeps previous versions for rollback or reuse
       RetentionPolicy: Retain
+
     Metadata:
+      # 📦 Informs SAM that this layer is built using Python 3.10
       BuildMethod: python3.10
 
-# ------------------------------------------------
+# -----------------------------------------------------------------------------
 # 📤 OUTPUTS
-# For CI/CD and stack referencing
-# ------------------------------------------------
+# Exports values for use in CI/CD or nested stacks
+# -----------------------------------------------------------------------------
 Outputs:
+
   LayerVersionArn:
     Description: ARN of the deployed chat Client Lambda Layer
     Value: !Ref chatClientLayer
     Export:
+      # Allows other stacks to reference this layer using Fn::ImportValue
       Name: !Sub chatClientLayerArn-${Stage}
 
   StackName:
     Description: Name of the deployed SAM stack
     Value: !Ref AWS::StackName
 
-# ------------------------------------------------
-# 💡 Notes for CI/CD
-# - Use `sam build --use-container` if using native dependencies
-# - Use `sam deploy --guided` (first time) or provide `--parameter-overrides` for Stage/Bucket
-# - Example:
-#   sam deploy --stack-name chat-client-stack-dev \
-#              --parameter-overrides Stage=dev DeploymentBucket=my-deployment-bucket \
-#              --capabilities CAPABILITY_IAM
-# ------------------------------------------------
+# -----------------------------------------------------------------------------
+# 🛠️ CI/CD NOTES
+#
+# First-time deploy:
+#   sam build --use-container
+#   sam deploy --guided
+#
+# Subsequent deploys (e.g. in CI/CD):
+#   sam deploy \
+#     --stack-name chat-client-stack-dev \
+#     --parameter-overrides Stage=dev DeploymentBucket=my-deployment-bucket \
+#     --capabilities CAPABILITY_IAM
+#
+# Make sure that `build/chat-client-layer.zip` is created via Makefile before deployment.
+# -----------------------------------------------------------------------------
