@@ -1,0 +1,140 @@
+.header-nav {
+    width: 100%;
+    padding: 0 2vw;
+    height: 60px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+    z-index: 10;
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    gap: 8px;
+  }
+  
+  .nav-logo img {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+  
+  .nav-links a {
+    color: #222;
+    text-decoration: none;
+    font-size: 0.98rem;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  
+  .nav-links a:hover {
+    color: #0077ff;
+  }
+  
+  .nav-btn {
+    background: #e5effa;
+    color: #222;
+    border: none;
+    border-radius: 18px;
+    padding: 7px 18px;
+    font-size: 0.98rem;
+    font-weight: 600;
+    margin-left: 10px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  
+  .nav-btn:hover {
+    background: #b3d4fc;
+    color: #111;
+  }
+  
+  /* Responsive: menú hamburguesa */
+  .nav-toggle,
+  .nav-mobile,
+  .nav-toggle-label {
+    display: none;
+  }
+  
+  @media (max-width: 700px) {
+    .nav-links {
+      display: none;
+    }
+    .nav-toggle {
+      display: block;
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      width: 32px;
+      height: 32px;
+      opacity: 0;
+      z-index: 20;
+      cursor: pointer;
+    }
+    .nav-toggle-label {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      z-index: 21;
+    }
+    .nav-toggle-label span,
+    .nav-toggle-label span::before,
+    .nav-toggle-label span::after {
+      display: block;
+      background: #222;
+      height: 3px;
+      width: 22px;
+      border-radius: 2px;
+      position: relative;
+      transition: all 0.3s;
+    }
+    .nav-toggle-label span::before,
+    .nav-toggle-label span::after {
+      content: '';
+      position: absolute;
+    }
+    .nav-toggle-label span::before {
+      top: -7px;
+    }
+    .nav-toggle-label span::after {
+      top: 7px;
+    }
+    .nav-mobile {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      position: absolute;
+      top: 60px;
+      right: 0;
+      background: #fff;
+      width: 100vw;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      padding: 18px 24px;
+      gap: 18px;
+      z-index: 19;
+      transform: translateY(-120%);
+      transition: transform 0.3s;
+    }
+    .nav-toggle:checked ~ .nav-mobile {
+      transform: translateY(0);
+    }
+  }
