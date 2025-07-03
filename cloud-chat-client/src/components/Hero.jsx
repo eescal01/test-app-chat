@@ -2,6 +2,7 @@ import React from "react";
 import assets from "../assets/assets";
 import "./Hero.css";
 import HeaderNav from "./Header";
+import Footer from "./Footer";
 import { login } from '../utils/google_auth_login';
 
 const CommunityHero = () => (
@@ -19,24 +20,14 @@ const CommunityHero = () => (
             friends. Where you can stay close and have fun over text, voice, and
             video.
           </p>
-          <button className="hero-btn" onClick={login}>Try the App</button>
+          <button className="hero-btn" onClick={login}>
+            Try the App
+          </button>
         </div>
       </div>
-      <footer className="hero-footer">
-        <div className="hero-socials">
-          <a href="#">
-            <i className="fa-brands fa-twitter"></i>
-          </a>
-          <a href="#">
-            <i className="fa-brands fa-instagram"></i>
-          </a>
-          <a href="#">
-            <i className="fa-brands fa-facebook"></i>
-          </a>
-        </div>
-        <div className="hero-copyright">©2025 Connect</div>
-      </footer>
     </div>
+    <div className="footer-copyright">©2025 Connect</div>
+    <Footer />
   </>
 );
 

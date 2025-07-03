@@ -1,6 +1,7 @@
 import React from "react";
 import logo from "../assets/react.svg";
 import "./Header.css";
+import { login } from '../utils/google_auth_login';
 
 const HeaderNav = () => (
   <header className="header-nav">
@@ -13,7 +14,7 @@ const HeaderNav = () => (
       <a href="#">Download</a>
       <a href="#">Safety</a>
       <a href="#">Support</a>
-      <button className="nav-btn">Try the App</button>
+      <button className="nav-btn" onClick={login}>Try the App</button>
     </nav>
     {/* Menú hamburguesa para móviles */}
     <input type="checkbox" id="nav-toggle" className="nav-toggle" />

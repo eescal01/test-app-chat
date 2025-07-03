@@ -1,0 +1,112 @@
+.footer {
+    background: #2c3e50;
+    color: #ecf0f1;
+    padding: 40px 0 20px 0;
+    font-family: 'Plus Jakarta Sans', 'Noto Sans', Arial, sans-serif;
+  }
+  
+  .footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 40px;
+  }
+  
+  .footer-links {
+    display: flex;
+    gap: 60px;
+    flex-wrap: wrap;
+  }
+  
+  .footer-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .footer-section a {
+    color: #bdc3c7;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 400;
+    transition: color 0.2s;
+  }
+  
+  .footer-section a:hover {
+    color: #3498db;
+  }
+  
+  .footer-contact p {
+    color: #bdc3c7;
+    font-size: 0.95rem;
+    margin: 0 0 8px 0;
+    font-weight: 400;
+  }
+  
+  .footer-socials {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  
+  .footer-socials a {
+    color: #bdc3c7;
+    font-size: 1.4rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+  
+  .footer-socials a:hover {
+    color: #3498db;
+    border-color: #3498db;
+    background: rgba(52, 152, 219, 0.1);
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .footer-content {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 30px;
+    }
+    
+    .footer-links {
+      flex-direction: column;
+      gap: 24px;
+      text-align: center;
+    }
+    
+    .footer-section {
+      align-items: center;
+    }
+    
+    .footer-socials {
+      justify-content: center;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .footer {
+      padding: 30px 0 15px 0;
+    }
+    
+    .footer-links {
+      gap: 20px;
+    }
+    
+    .footer-section a,
+    .footer-contact p {
+      font-size: 0.9rem;
+    }
+  }
