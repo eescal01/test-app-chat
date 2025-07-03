@@ -22,7 +22,7 @@ def bucket_exists(bucket, region):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Deploy Cognito Google OAuth stack via SAM with nested templates")
+    parser = argparse.ArgumentParser(description="Deploy Cognito + CoreInfra stacks via SAM with nested templates")
     parser.add_argument('--bucket', required=True, help='S3 bucket to upload nested templates')
     parser.add_argument('--stack-name', default='cognito-google-auth-stack', help='Root stack name')
     parser.add_argument('--region', default='us-east-1', help='AWS region')
@@ -31,38 +31,66 @@ def main():
     parser.add_argument('--google-client-secret', required=True, help='OAuth Client Secret from Google')
     args = parser.parse_args()
 
-    # Define paths
-    nested_dir = Path("services/cognito")
-    nested_template = nested_dir / "nested-cognito-google-auth-stack.yaml"
-    packaged_template = nested_dir / "nested-cognito-google-auth-stack-packaged.yaml"
-    nested_s3_prefix = "services/cognito"
-
     print(f"🔍 Checking if bucket s3://{args.bucket} exists...")
     if not bucket_exists(args.bucket, args.region):
         print(f"❌ S3 bucket {args.bucket} does not exist or is not accessible.")
         sys.exit(1)
 
-    # Package nested stack
-    print(f"📦 Packaging nested Cognito stack: {nested_template}")
+    # --------------------------------------------
+    # 🧩 Cognito nested stack
+    # --------------------------------------------
+    cognito_dir = Path("services/cognito")
+    cognito_template = cognito_dir / "nested-cognito-google-auth-stack.yaml"
+    cognito_packaged = cognito_dir / "nested-cognito-google-auth-stack-packaged.yaml"
+    cognito_s3_prefix = "services/cognito"
+
+    print(f"📦 Packaging nested Cognito stack: {cognito_template}")
     run([
         'sam', 'package',
-        '--template-file', nested_template.name,
-        '--output-template-file', packaged_template.name,
+        '--template-file', cognito_template.name,
+        '--output-template-file', cognito_packaged.name,
         '--s3-bucket', args.bucket,
         '--region', args.region,
-        '--s3-prefix', nested_s3_prefix
-    ], cwd=nested_dir)
+        '--s3-prefix', cognito_s3_prefix
+    ], cwd=cognito_dir)
 
-    # Upload packaged nested stack to S3
-    print(f"📤 Uploading nested Cognito template to S3: {packaged_template}")
+    print(f"📤 Uploading nested Cognito template to S3: {cognito_packaged}")
     run([
         'aws', 's3', 'cp',
-        str(packaged_template),
-        f's3://{args.bucket}/{nested_s3_prefix}/nested-cognito-google-auth-stack.yaml',
+        str(cognito_packaged),
+        f's3://{args.bucket}/{cognito_s3_prefix}/nested-cognito-google-auth-stack.yaml',
         '--region', args.region
     ])
 
-    # Package root stack
+    # --------------------------------------------
+    # 🧱 Core Infrastructure nested stack (DynamoDB)
+    # --------------------------------------------
+    coreinfra_dir = Path("services/core-infra")
+    coreinfra_template = coreinfra_dir / "core-infra.yaml"
+    coreinfra_packaged = coreinfra_dir / "core-infra-packaged.yaml"
+    coreinfra_s3_prefix = "services/core-infra"
+
+    print(f"📦 Packaging nested CoreInfra stack: {coreinfra_template}")
+    run([
+        'sam', 'package',
+        '--template-file', coreinfra_template.name,
+        '--output-template-file', coreinfra_packaged.name,
+        '--s3-bucket', args.bucket,
+        '--region', args.region,
+        '--s3-prefix', coreinfra_s3_prefix
+    ], cwd=coreinfra_dir)
+
+    print(f"📤 Uploading nested CoreInfra template to S3: {coreinfra_packaged}")
+    run([
+        'aws', 's3', 'cp',
+        str(coreinfra_packaged),
+        f's3://{args.bucket}/{coreinfra_s3_prefix}/core-infra.yaml',
+        '--region', args.region
+    ])
+
+    # --------------------------------------------
+    # 🚀 Package and deploy root stack
+    # --------------------------------------------
     print("📦 Packaging root stack...")
     run([
         'sam', 'package',
@@ -72,7 +100,6 @@ def main():
         '--region', args.region
     ])
 
-    # Deploy root stack
     print(f"🚀 Deploying root stack: {args.stack_name}")
     run([
         'sam', 'deploy',
@@ -85,7 +112,7 @@ def main():
         f"GoogleClientId={args.google_client_id} GoogleClientSecret={args.google_client_secret}"
     ])
 
-    print("✅ Cognito + Google OAuth stack deployed successfully.")
+    print("✅ Cognito + CoreInfra stacks deployed successfully.")
 
 
 if __name__ == '__main__':
