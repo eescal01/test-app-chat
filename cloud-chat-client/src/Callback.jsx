@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 const COGNITO_DOMAIN = 'https://google-auth-domain-dev.auth.us-east-1.amazoncognito.com';
 const CLIENT_ID = '758g0k3knce0c6kp66goo5hgvk';
-const REDIRECT_URI = 'http://localhost:5173/callback';
+const REDIRECT_URI = 'https://main.d2p1llmpk1i4a9.amplifyapp.com/callback';
 
 export default function Callback() {
   const navigate = useNavigate();
