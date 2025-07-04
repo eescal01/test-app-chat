@@ -3,7 +3,7 @@ import assets from "../../../assets/assets";
 import "./Hero.css";
 import HeaderNav from "../Header";
 import Footer from "../Footer";
-import { login } from '../../../utils/google_auth_login';
+import { login } from '../../../services/authService';
 
 const CommunityHero = () => (
   <>

@@ -1,9 +1,6 @@
-// src/Callback.jsx
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { COGNITO_DOMAIN, CLIENT_ID, REDIRECT_URI, RESPONSE_TYPE, SCOPE } from './config';
-
-// Ahora puedes usar estas variables en tu componente App
+import { COGNITO_DOMAIN, CLIENT_ID, REDIRECT_URI } from '../../config';
 
 export default function Callback() {
   const navigate = useNavigate();
@@ -55,5 +52,9 @@ export default function Callback() {
     fetchTokens();
   }, [navigate]);
 
-  return <p>Logging you in with Google...</p>;
-}
+  return (
+    <div style={{ textAlign: 'center', marginTop: 100, fontFamily: 'Plus Jakarta Sans, Arial, sans-serif' }}>
+      <p>Logging you in with Google...</p>
+    </div>
+  );
+} 

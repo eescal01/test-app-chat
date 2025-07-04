@@ -1,10 +1,10 @@
 import React from "react";
-import CommunityHero from "./components/layout/Hero";
+import { Home } from "./pages";
 
 export default function App() {
   return (
     <div>
-      <CommunityHero />
+      <Home />
     </div>
   );
 }
