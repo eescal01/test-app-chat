@@ -43,6 +43,11 @@ Parameters:
     Description: |
       Client secret from Google Cloud Console, used to exchange auth codes for tokens.
 
+  PostConfirmationLambdaArn:
+    Type: String
+    Description: ARN of Lambda to run on Cognito PostConfirmation trigger
+
+
 # -----------------------------------------------------------------------------
 # 🏗️ RESOURCES
 # -----------------------------------------------------------------------------
@@ -55,20 +60,22 @@ Resources:
   # The central user directory for the application.
   # We're using email as the unique ID and enabling admin-only user creation.
   # Since this is OAuth-based, users are federated — they log in via Google.
-  UserPool:
-    Type: AWS::Cognito::UserPool
-    Properties:
-      UserPoolName: !Sub google-auth-userpool-${Stage}
-      AutoVerifiedAttributes:
-        - email  # Email will be auto-verified upon registration
-      UsernameConfiguration:
-        CaseSensitive: false  # More user-friendly username handling
-      AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: true  # Manual user provisioning if needed
-      AccountRecoverySetting:
-        RecoveryMechanisms:
-          - Name: verified_email
-            Priority: 1  # Password recovery will use verified email
+  UserPool :
+    Type : AWS::Cognito::UserPool
+    Properties :
+      UserPoolName : !Sub google-auth-userpool-${Stage}
+      AutoVerifiedAttributes :
+        - email
+      UsernameConfiguration :
+        CaseSensitive : false
+      AdminCreateUserConfig :
+        AllowAdminCreateUserOnly : false
+      AccountRecoverySetting :
+        RecoveryMechanisms :
+          - Name : verified_email
+            Priority : 1
+      LambdaConfig :
+        PostConfirmation : !Ref PostConfirmationLambdaArn
 
   # -----------------------------------------------------------------------------
   # 2️⃣ Hosted Cognito Domain

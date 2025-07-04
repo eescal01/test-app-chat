@@ -25,6 +25,11 @@ Parameters:
     Default: dev
     Description: Deployment environment (e.g., dev, staging, prod)
 
+  ChatAppTableName:
+    Type: String
+  ChatAppTableArn:
+      Type: String
+
 # ---------------------------------------------------------------------
 # ⚙️ Globals
 # ---------------------------------------------------------------------
@@ -79,16 +84,74 @@ Resources:
       CodeUri: test_lambda/core                # Folder containing the Lambda code
       Role: !GetAtt TestLambdaExecutionRole.Arn # Attach the IAM role defined above
 
+
+  PostConfirmationExecutionRole :
+    Type : AWS::IAM::Role
+    Properties :
+      RoleName : !Sub post-confirmation-execution-role-${Stage}
+      AssumeRolePolicyDocument :
+        Version : '2012-10-17'
+        Statement :
+          - Effect : Allow
+            Principal :
+              Service : lambda.amazonaws.com
+            Action : sts:AssumeRole
+      Policies :
+        - PolicyName : DynamoDBWriteAndLog
+          PolicyDocument :
+            Version : '2012-10-17'
+            Statement :
+              - Effect : Allow
+                Action :
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource : "*"
+              - Effect : Allow
+                Action :
+                  - dynamodb:PutItem
+                Resource : !Ref ChatAppTableArn
+
+  # Lambda asociada al rol anterior
+  PostConfirmationLambda :
+    Type : AWS::Serverless::Function
+    Properties :
+      FunctionName : !Sub post-confirmation-lambda-${Stage}
+      Handler : handler.lambda_handler
+      CodeUri : post_confirmation/core
+      Role : !GetAtt PostConfirmationExecutionRole.Arn
+      Environment :
+        Variables :
+          TABLE_NAME : !Ref ChatAppTableName
+
+  # Permiso explícito para que Cognito invoque la Lambda como trigger
+  PostConfirmationInvokePermission :
+    Type : AWS::Lambda::Permission
+    Properties :
+      Action : lambda:InvokeFunction
+      FunctionName : !Ref PostConfirmationLambda
+      Principal : cognito-idp.amazonaws.com
+      SourceArn : "*"
+
+
 # ---------------------------------------------------------------------
 # 📤 Outputs
 # ---------------------------------------------------------------------
 # These outputs can be used for debugging or referenced in other stacks
 Outputs:
 
-  TestLambdaFunctionName:
-    Description: Logical name of the deployed test Lambda function
-    Value: !Ref TestLambdaFunction
+  TestLambdaFunctionName :
+    Description : Logical name of the deployed test Lambda function
+    Value : !Ref TestLambdaFunction
 
-  TestLambdaFunctionArn:
-    Description: ARN of the deployed test Lambda function
-    Value: !GetAtt TestLambdaFunction.Arn
+  TestLambdaFunctionArn :
+    Description : ARN of the deployed test Lambda function
+    Value : !GetAtt TestLambdaFunction.Arn
+
+  PostConfirmationLambdaName :
+    Description : Logical name of the deployed PostConfirmation Lambda
+    Value : !Ref PostConfirmationLambda
+
+  PostConfirmationLambdaArn :
+    Description : ARN of the deployed PostConfirmation Lambda
+    Value : !GetAtt PostConfirmationLambda.Arn

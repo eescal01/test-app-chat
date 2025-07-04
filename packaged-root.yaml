@@ -38,20 +38,6 @@ Parameters:
 
       '
 Resources:
-  CognitoGoogleAuthStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL:
-        Fn::Sub: https://${DeploymentBucket}.s3.${AWS::Region}.amazonaws.com/services/cognito/nested-cognito-google-auth-stack.yaml
-      Parameters:
-        Stage:
-          Ref: Stage
-        GoogleClientId:
-          Ref: GoogleClientId
-        GoogleClientSecret:
-          Ref: GoogleClientSecret
-    Metadata:
-      SamResourceId: CognitoGoogleAuthStack
   CoreInfraStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -70,8 +56,34 @@ Resources:
       Parameters:
         Stage:
           Ref: Stage
+        ChatAppTableName:
+          Fn::GetAtt:
+          - CoreInfraStack
+          - Outputs.ChatAppTableName
+        ChatAppTableArn:
+          Fn::GetAtt:
+          - CoreInfraStack
+          - Outputs.ChatAppTableArn
     Metadata:
       SamResourceId: LambdaStack
+  CognitoGoogleAuthStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Sub: https://${DeploymentBucket}.s3.${AWS::Region}.amazonaws.com/services/cognito/nested-cognito-google-auth-stack.yaml
+      Parameters:
+        Stage:
+          Ref: Stage
+        GoogleClientId:
+          Ref: GoogleClientId
+        GoogleClientSecret:
+          Ref: GoogleClientSecret
+        PostConfirmationLambdaArn:
+          Fn::GetAtt:
+          - LambdaStack
+          - Outputs.PostConfirmationLambdaArn
+    Metadata:
+      SamResourceId: CognitoGoogleAuthStack
 Outputs:
   CognitoNestedStackId:
     Description: 'Logical ID of the Cognito Google OAuth nested stack.

@@ -58,6 +58,29 @@ Parameters:
 
 Resources:
 
+  # 💬 Core Infrastructure Stack
+  # This nested stack creates the DynamoDB table and indexes for storing chat data.
+  # Uses a single-table design pattern for scalable real-time messaging.
+  CoreInfraStack :
+    Type : AWS::CloudFormation::Stack
+    Properties :
+      TemplateURL : !Sub https://${DeploymentBucket}.s3.${AWS::Region}.amazonaws.com/services/core-infra/core-infra.yaml
+      Parameters :
+        Stage : !Ref Stage
+
+
+  # 📈 Observability & Monitoring Stack
+  # This nested stack deploys Lambda functions for monitoring Vault, Chatwoot, and SES.
+  # Helps ensure visibility, error tracking, and email integration across environments.
+  LambdaStack :
+    Type : AWS::CloudFormation::Stack
+    Properties :
+      TemplateURL : !Sub https://${DeploymentBucket}.s3.${AWS::Region}.amazonaws.com/services/lambdas/nested-lambdas-stack.yaml
+      Parameters :
+        Stage : !Ref Stage
+        ChatAppTableName : !GetAtt CoreInfraStack.Outputs.ChatAppTableName
+        ChatAppTableArn : !GetAtt CoreInfraStack.Outputs.ChatAppTableArn
+
   # 🔐 Cognito Authentication Stack
   # This nested stack creates an authentication system using Amazon Cognito
   # and integrates Google OAuth 2.0 for passwordless sign-in.
@@ -70,26 +93,7 @@ Resources:
         Stage: !Ref Stage  # Pass the environment stage into the nested stack
         GoogleClientId: !Ref GoogleClientId  # Pass Google client ID securely
         GoogleClientSecret: !Ref GoogleClientSecret  # Pass Google client secret securely
-
-  # 💬 Core Infrastructure Stack
-  # This nested stack creates the DynamoDB table and indexes for storing chat data.
-  # Uses a single-table design pattern for scalable real-time messaging.
-  CoreInfraStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub https://${DeploymentBucket}.s3.${AWS::Region}.amazonaws.com/services/core-infra/core-infra.yaml
-      Parameters:
-        Stage: !Ref Stage
-
-  # 📈 Observability & Monitoring Stack
-  # This nested stack deploys Lambda functions for monitoring Vault, Chatwoot, and SES.
-  # Helps ensure visibility, error tracking, and email integration across environments.
-  LambdaStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub https://${DeploymentBucket}.s3.${AWS::Region}.amazonaws.com/services/lambdas/nested-lambdas-stack.yaml
-      Parameters:
-        Stage: !Ref Stage
+        PostConfirmationLambdaArn: !GetAtt LambdaStack.Outputs.PostConfirmationLambdaArn
 
 # ---------------------------------------------------------------------
 # 📤 OUTPUTS
