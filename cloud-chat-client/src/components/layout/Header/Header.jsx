@@ -1,7 +1,7 @@
 import React from "react";
 import logo from "../../../assets/react.svg";
 import "./Header.css";
-import { login } from '../../../utils/google_auth_login';
+import { login } from '../../../services/authService';
 
 const HeaderNav = () => (
   <header className="header-nav">

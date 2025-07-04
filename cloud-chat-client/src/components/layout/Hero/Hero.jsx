@@ -5,7 +5,7 @@ import HeaderNav from "../Header";
 import Footer from "../Footer";
 import { login } from '../../../services/authService';
 
-const CommunityHero = () => (
+const Hero = () => (
   <>
     <HeaderNav />
     <div className="hero-container">
@@ -30,4 +30,4 @@ const CommunityHero = () => (
   </>
 );
 
-export default CommunityHero; 
+export default Hero; 

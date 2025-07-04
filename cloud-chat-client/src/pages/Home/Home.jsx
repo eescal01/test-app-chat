@@ -1,8 +1,8 @@
 import React from "react";
-import CommunityHero from "../../components/layout/Hero";
+import Hero from "../../components/layout/Hero";
 
 const Home = () => {
-  return <CommunityHero />;
+  return <Hero />;
 };
 
 export default Home; 
