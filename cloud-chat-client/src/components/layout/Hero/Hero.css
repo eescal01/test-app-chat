@@ -99,6 +99,9 @@
     .hero-content h1 {
       font-size: 1.5rem;
     }
+    .hero-container {
+      min-height: 50vh;
+    }
   }
   
   @media (max-width: 400px) {
@@ -108,5 +111,9 @@
     .hero-btn {
       padding: 8px 16px;
       font-size: 1rem;
+    }
+
+    .hero-container {
+      min-height: 50vh;
     }
   } 
