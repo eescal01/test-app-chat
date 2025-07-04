@@ -100,7 +100,7 @@
       font-size: 1.5rem;
     }
     .hero-container {
-      min-height: 50vh;
+      min-height: 55vh;
     }
   }
   
@@ -114,6 +114,6 @@
     }
 
     .hero-container {
-      min-height: 50vh;
+      min-height: 55vh;
     }
   } 
