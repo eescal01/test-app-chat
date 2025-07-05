@@ -68,7 +68,6 @@ Resources:
       Parameters :
         Stage : !Ref Stage
 
-
   # 📈 Observability & Monitoring Stack
   # This nested stack deploys Lambda functions for monitoring Vault, Chatwoot, and SES.
   # Helps ensure visibility, error tracking, and email integration across environments.
@@ -81,6 +80,14 @@ Resources:
         ChatAppTableName : !GetAtt CoreInfraStack.Outputs.ChatAppTableName
         ChatAppTableArn : !GetAtt CoreInfraStack.Outputs.ChatAppTableArn
 
+  ApiGatewayV2Stack :
+    Type : AWS::CloudFormation::Stack
+    Properties :
+      TemplateURL : !Sub https://${DeploymentBucket}.s3.${AWS::Region}.amazonaws.com/services/apigateway_v2/apigateway_v2.yaml
+      Parameters :
+        ConnectLambdaArn : !GetAtt LambdaStack.Outputs.ConnectLambdaArn
+        DisconectLambdaArn : !GetAtt LambdaStack.Outputs.DisconectLambdaArn
+        SendMessageLambdaArn : !GetAtt LambdaStack.Outputs.SendMessageLambdaArn
   # 🔐 Cognito Authentication Stack
   # This nested stack creates an authentication system using Amazon Cognito
   # and integrates Google OAuth 2.0 for passwordless sign-in.

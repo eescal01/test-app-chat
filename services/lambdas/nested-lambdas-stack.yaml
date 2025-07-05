@@ -29,7 +29,6 @@ Parameters:
     Type: String
   ChatAppTableArn:
       Type: String
-
 # ---------------------------------------------------------------------
 # ⚙️ Globals
 # ---------------------------------------------------------------------
@@ -44,6 +43,93 @@ Globals:
 # 🧱 Resources
 # ---------------------------------------------------------------------
 Resources:
+
+  # -----------------------------------------------------------------
+  # 🔐 IAM Roles para Lambdas de chat
+  # -----------------------------------------------------------------
+  ConnectLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub connect-lambda-role-${Stage}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: DynamoDBWriteAndLog
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:GetItem
+                  - dynamodb:DeleteItem
+                Resource: !Ref ChatAppTableArn
+
+  DisconectLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub disconnect-lambda-role-${Stage}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: DynamoDBWriteAndLog
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:Query
+                Resource: !Ref ChatAppTableArn
+
+  SendMessageLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub send-message-lambda-role-${Stage}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: FullDynamoDBAndWS
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:GetItem
+                  - dynamodb:Query
+                Resource: !Ref ChatAppTableArn
+              - Effect: Allow
+                Action:
+                  - execute-api:ManageConnections
+                Resource: "*"
 
   # -----------------------------------------------------------------
   # 🔐 IAM Role for Lambda execution
@@ -125,15 +211,72 @@ Resources:
           TABLE_NAME : !Ref ChatAppTableName
 
   # Permiso explícito para que Cognito invoque la Lambda como trigger
-  PostConfirmationInvokePermission :
-    Type : AWS::Lambda::Permission
+  #PostConfirmationInvokePermission :
+  #  Type : AWS::Lambda::Permission
+  #  Properties :
+  #    Action : lambda:InvokeFunction
+  #    FunctionName : !Ref PostConfirmationLambda
+  #    Principal : cognito-idp.amazonaws.com
+  #    SourceArn : arn:aws:cognito-idp:us-east-1:533267106997:userpool/us-east-1_yMEYItvec
+
+  # -----------------------------------------------------------------
+  # 💬 Lambdas principales de chat
+  # -----------------------------------------------------------------
+  ConnectLambda :
+    Type : AWS::Serverless::Function
     Properties :
-      Action : lambda:InvokeFunction
-      FunctionName : !Ref PostConfirmationLambda
-      Principal : cognito-idp.amazonaws.com
-      SourceArn : "*"
+      FunctionName : !Sub connect-lambda-${Stage}
+      Handler : handler.lambda_handler
+      CodeUri : lambda_connect
+      Role : !GetAtt ConnectLambdaRole.Arn
+      Environment :
+        Variables :
+          TABLE_NAME : !Ref ChatAppTableName
 
+  DisconectLambda :
+    Type : AWS::Serverless::Function
+    Properties :
+      FunctionName : !Sub disconnect-lambda-${Stage}
+      Handler : handler.lambda_handler
+      CodeUri : lambda_disconect
+      Role : !GetAtt DisconectLambdaRole.Arn
+      Environment :
+        Variables :
+          TABLE_NAME : !Ref ChatAppTableName
 
+  SendMessageLambda :
+    Type : AWS::Serverless::Function
+    Properties :
+      FunctionName : !Sub send-message-lambda-${Stage}
+      Handler : handler.lambda_handler
+      CodeUri : lambda_send_message
+      Role : !GetAtt SendMessageLambdaRole.Arn
+      Environment :
+        Variables :
+          TABLE_NAME : !Ref ChatAppTableName
+          REGION : !Ref AWS::Region
+      #    WS_API_ID : !Ref ChatWebSocketApiId  #
+
+  ConnectLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ConnectLambda
+      Principal: apigateway.amazonaws.com
+
+  DisconectLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref DisconectLambda
+      Principal: apigateway.amazonaws.com
+
+  SendMessageLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref SendMessageLambda
+      Principal: apigateway.amazonaws.com
 # ---------------------------------------------------------------------
 # 📤 Outputs
 # ---------------------------------------------------------------------
@@ -155,3 +298,21 @@ Outputs:
   PostConfirmationLambdaArn :
     Description : ARN of the deployed PostConfirmation Lambda
     Value : !GetAtt PostConfirmationLambda.Arn
+
+  ConnectLambdaArn :
+    Description : ARN of the Connect Lambda
+    Value : !GetAtt ConnectLambda.Arn
+    Export :
+      Name : ConnectLambdaArn
+
+  DisconectLambdaArn :
+    Description : ARN of the Disconnect Lambda
+    Value : !GetAtt DisconectLambda.Arn
+    Export :
+      Name : DisconectLambdaArn
+
+  SendMessageLambdaArn :
+    Description : ARN of the SendMessage Lambda
+    Value : !GetAtt SendMessageLambda.Arn
+    Export :
+      Name : SendMessageLambdaArn

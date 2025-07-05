@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 import ast
 
+
 class CognitoUserAttributes(BaseModel):
     sub: str
     name: Optional[str] = ""
@@ -20,6 +21,7 @@ class CognitoUserAttributes(BaseModel):
         except Exception as e:
             print(f"Failed to parse identities, fallback to sub: {e}")
         return self.sub
+
 
 class PostConfirmationEvent(BaseModel):
     request: dict

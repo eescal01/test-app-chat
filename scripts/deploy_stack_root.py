@@ -136,6 +136,25 @@ def main():
     ], cwd=coreinfra_dir)
 
     # --------------------------
+    # 🌐 API Gateway WebSocket Stack
+    # --------------------------
+    apigateway_dir = Path("services/apigateway_v2")
+    run([
+        'sam', 'package',
+        '--template-file', 'apigateway_v2.yaml',
+        '--output-template-file', 'apigateway_v2-packaged.yaml',
+        '--s3-bucket', args.bucket,
+        '--region', args.region,
+        '--s3-prefix', 'services/apigateway_v2'
+    ], cwd=apigateway_dir)
+    run([
+        'aws', 's3', 'cp',
+        'apigateway_v2-packaged.yaml',
+        f's3://{args.bucket}/services/apigateway_v2/apigateway_v2.yaml',
+        '--region', args.region
+    ], cwd=apigateway_dir)
+
+    # --------------------------
     # 📈 Observability Lambdas
     # --------------------------
     monitor_dir = Path("services/lambdas")

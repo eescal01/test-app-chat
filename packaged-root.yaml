@@ -66,6 +66,26 @@ Resources:
           - Outputs.ChatAppTableArn
     Metadata:
       SamResourceId: LambdaStack
+  ApiGatewayV2Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Sub: https://${DeploymentBucket}.s3.${AWS::Region}.amazonaws.com/services/apigateway_v2/apigateway_v2.yaml
+      Parameters:
+        ConnectLambdaArn:
+          Fn::GetAtt:
+          - LambdaStack
+          - Outputs.ConnectLambdaArn
+        DisconectLambdaArn:
+          Fn::GetAtt:
+          - LambdaStack
+          - Outputs.DisconectLambdaArn
+        SendMessageLambdaArn:
+          Fn::GetAtt:
+          - LambdaStack
+          - Outputs.SendMessageLambdaArn
+    Metadata:
+      SamResourceId: ApiGatewayV2Stack
   CognitoGoogleAuthStack:
     Type: AWS::CloudFormation::Stack
     Properties:
