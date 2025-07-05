@@ -2,7 +2,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Home, Callback, Chat } from './pages';
+import { Home, Callback, Chat, ChatRoom
+} from './pages';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -10,7 +11,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/callback" element={<Callback />} />
-        <Route path="/chat" element={<Chat />} />
+        <Route path="/chat" element={<ChatRoom />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

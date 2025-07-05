@@ -31,7 +31,7 @@ export default function Callback() {
         });
 
         const data = await response.json();
-
+        console.log(data)
         if (data.error) {
           console.error('Token exchange error:', data);
           return;
